@@ -21,5 +21,5 @@
     {"name": "enterprise", "command": ["bin/telora", "run", "ent-1/bin-src/main.telora"], "required": true}
   ],
   "observe": ["ontology", "ent-1"],
-  "archive": ["docs", "ontology", "ent-1", "opencode.json", "experiment.json"]
+  "archive": ["docs", "ontology", "ent-1", ".opencode", "opencode.json", "experiment.json"]
 }

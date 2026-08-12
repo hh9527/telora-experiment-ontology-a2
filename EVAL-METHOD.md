@@ -19,8 +19,9 @@ reliability. A passing final program does not erase process friction.
 Before a run, record:
 
 - plan repository commit and origin;
-- hashes of `experiment.json` and `opencode.json`, and confirmation that the exact coordinator start
-  prompt was used without a wrapper;
+- hashes of `experiment.json`, `opencode.json`, and every
+  `.opencode/agents/*.md` role file, plus confirmation that the exact
+  coordinator start prompt was used without a wrapper;
 - hashes of `docs/LANG-TUTORIAL.md`, `docs/TELORA-CLI.md`,
   `ontology/GOAL.md`, `ontology/DESIGN.md`, `ent-1/GOAL.md`, and
   `ent-1/DOMAIN.md`;

@@ -30,6 +30,10 @@ ent-1/
   telora-deps.json
   src/
   bin-src/
+.opencode/agents/
+  coordinator.md         # 协调角色元数据与状态转换协议
+  a2.md                  # A2 角色元数据与提示词
+  a3.md                  # A3 角色元数据与提示词
 ```
 
 共享目录不代表共享权限。A3 看不到 `ontology/GOAL.md`、`ontology/DESIGN.md`、源码、验证入口和
@@ -40,13 +44,16 @@ ent-1/
 固定提示只要求其遵循自身 agent prompt 与可见文件，不得转述、补充或改写任务
 定义。
 
-`opencode.json` 是 agent prompt 和权限的 SSOT；`experiment.json` 是 Host 使用的
+`.opencode/agents/*.md` 是 OpenCode 原生的角色配置：frontmatter 保存角色元数据
+和权限，正文保存角色提示词。`opencode.json` 只选择默认 coordinator。
+`experiment.json` 是 Host 使用的
 artifact、固定启动提示词、OpenCode daemon 环境、validation 与归档范围的 SSOT。
 本计划把 `OPENCODE_EXPERIMENTAL_OUTPUT_TOKEN_MAX` 固定为 `128000`，避免 A2 的
 单次深度推理被 OpenCode 默认的 32000 token 上限截断。该值由 `oc-run` 在启动
 握手 daemon 和 TUI daemon 时注入，不需要在外部终端手工设置。每个 agent 都通过
 read/glob/grep/edit 规则显式拒绝 `experiment.json`，因此文件保留在 clone 中但不
-对 agent 可见。
+对 agent 可见。这些权限在 plan 中确定后即封闭；控制器不解析或安全审查角色
+配置，只驱动会话、观察和解读状态并归档证据。
 
 `oc-run` 只接受干净且已提交的 plan worktree，记录其 commit 和 origin，随后直接
 clone 到临时 workspace。clone 天然具有正确的 Git worktree 根，opencode 可按
