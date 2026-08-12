@@ -44,6 +44,11 @@ ent-1/
 固定提示只要求其遵循自身 agent prompt 与可见文件，不得转述、补充或改写任务
 定义。
 
+所有角色协议均明确列出：收到的白名单指令或发生的状态、判断依据、唯一动作和
+完成标准。Host 只向 coordinator 发送 `请开始实验。` 或
+`请根据当前状态继续实验。`；coordinator 只向 A2/A3 发送各自角色文件列出的固定
+指令。白名单之外的文本不触发工作流动作。
+
 `.opencode/agents/*.md` 是 OpenCode 原生的角色配置：frontmatter 保存角色元数据
 和权限，正文保存角色提示词。`opencode.json` 只选择默认 coordinator。
 `experiment.json` 是 Host 使用的
