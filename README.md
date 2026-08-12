@@ -36,7 +36,10 @@ ent-1/
 读取少量公开交付和进度材料。
 
 `opencode.json` 是 agent prompt 和权限的 SSOT；`experiment.json` 是 Host 使用的
-artifact、固定启动提示词、validation 与归档范围的 SSOT。每个 agent 都通过
+artifact、固定启动提示词、OpenCode daemon 环境、validation 与归档范围的 SSOT。
+本计划把 `OPENCODE_EXPERIMENTAL_OUTPUT_TOKEN_MAX` 固定为 `128000`，避免 A2 的
+单次深度推理被 OpenCode 默认的 32000 token 上限截断。该值由 `oc-run` 在启动
+握手 daemon 和 TUI daemon 时注入，不需要在外部终端手工设置。每个 agent 都通过
 read/glob/grep/edit 规则显式拒绝 `experiment.json`，因此文件保留在 clone 中但不
 对 agent 可见。
 
