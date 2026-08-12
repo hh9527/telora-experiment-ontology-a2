@@ -33,7 +33,9 @@ ent-1/
 共享目录不代表共享权限。A3 看不到 `ontology/DESIGN.md`、源码、验证入口和
 `NOTES.md`；A2 看不到 `ent-1/DOMAIN.md`、源码和 notes，只能在修订轮读取
 `ent-1/FEEDBACK.md`。coordinator 不写文件、不运行 Telora，只能调用 A2/A3 并
-读取少量公开交付和进度材料。
+读取少量公开交付和进度材料。coordinator 不是任务解释层：它不知道领域任务的
+含义，向子代理发送的固定提示只要求其遵循自身 agent prompt 与可见文件，不得
+转述、补充或改写任务定义。
 
 `opencode.json` 是 agent prompt 和权限的 SSOT；`experiment.json` 是 Host 使用的
 artifact、固定启动提示词、OpenCode daemon 环境、validation 与归档范围的 SSOT。
