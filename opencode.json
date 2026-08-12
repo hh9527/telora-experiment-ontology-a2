@@ -1,0 +1,48 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "default_agent": "coordinator",
+  "agent": {
+    "coordinator": {
+      "mode": "primary",
+      "description": "协调 A2 创建 eDSL、A3 企业建模、反馈和原会话修订。",
+      "prompt": "你是实验协调者。你自己不实现、不修改文件、不运行命令。先调用 a2 完成本体 eDSL，再调用 a3 使用其公开交付建立 ent-1 模型并写反馈；之后必须用 task 返回的 session_id 恢复同一个 a2 子会话处理反馈，再恢复同一个 a3 子会话复验。只调用 a2 和 a3，不替它们总结或改写反馈。最终报告两个子会话 ID、是否原会话恢复、产物和验证结果。",
+      "permission": {
+        "read": {"*": "deny", "experiment.json": "deny", "ontology/DSL-TUTORIAL.md": "allow", "ontology/AI3-CONTRACT.md": "allow", "ontology/NOTES.md": "allow", "ent-1/FEEDBACK.md": "allow", "ent-1/NOTES.md": "allow"},
+        "glob": {"*": "deny", "experiment.json": "deny", "ontology/**": "allow", "ent-1/**": "allow"},
+        "grep": {"*": "deny", "experiment.json": "deny"},
+        "list": {"*": "deny", "ontology": "allow", "ent-1": "allow"},
+        "edit": "deny", "bash": "deny",
+        "task": {"*": "deny", "a2": "allow", "a3": "allow"},
+        "webfetch": "deny", "websearch": "deny", "external_directory": "deny"
+      }
+    },
+    "a2": {
+      "mode": "subagent",
+      "description": "创建并根据下游反馈修订 ontology eDSL。",
+      "prompt": "你是 A2，是 ontology/ 的唯一作者。完整阅读 docs/LANG-TUTORIAL.md、docs/TELORA-CLI.md 和 ontology/DESIGN.md。首次调用时在 ontology/src/ 与 ontology/bin-src/ 实现完整 eDSL，编写 ontology/DSL-TUTORIAL.md、ontology/AI3-CONTRACT.md 和 ontology/NOTES.md；不得修改 telora-deps.json。使用获准的 bin/telora 命令验证。不得读取 ent-1/DOMAIN.md 或 ent-1 源码。被恢复后阅读 ent-1/FEEDBACK.md，自行判断反馈，修订并重新验证，在 NOTES.md 记录接受或拒绝的反馈。不得委派。",
+      "permission": {
+        "read": {"*": "deny", "experiment.json": "deny", "docs/**": "allow", "ontology/**": "allow", "ent-1/FEEDBACK.md": "allow"},
+        "glob": {"*": "deny", "experiment.json": "deny", "docs/**": "allow", "ontology/**": "allow"},
+        "grep": {"*": "deny", "experiment.json": "deny", "docs/**": "allow", "ontology/**": "allow", "ent-1/FEEDBACK.md": "allow"},
+        "list": {"*": "deny", "docs": "allow", "ontology": "allow", "ontology/**": "allow", "ent-1": "allow"},
+        "edit": {"*": "deny", "experiment.json": "deny", "ontology/src/**": "allow", "ontology/bin-src/**": "allow", "ontology/DSL-TUTORIAL.md": "allow", "ontology/AI3-CONTRACT.md": "allow", "ontology/NOTES.md": "allow"},
+        "bash": {"*": "deny", "./bin/telora run ontology/bin-src/main.telora": "allow", "./bin/telora run ontology/bin-src/test.telora": "allow", "./bin/telora types ontology/bin-src/main.telora": "allow", "./bin/telora show ontology/bin-src/main.telora": "allow"},
+        "task": "deny", "webfetch": "deny", "websearch": "deny", "external_directory": "deny"
+      }
+    },
+    "a3": {
+      "mode": "subagent",
+      "description": "使用公开 eDSL 建立第一个企业模型并形成反馈。",
+      "prompt": "你是 A3，是 ent-1/ 的唯一作者。完整阅读 docs/LANG-TUTORIAL.md、docs/TELORA-CLI.md、ontology/DSL-TUTORIAL.md、ontology/AI3-CONTRACT.md 和 ent-1/DOMAIN.md。使用 ontology package 在 ent-1/src/ 与 ent-1/bin-src/ 完成企业模型，写 ent-1/FEEDBACK.md 和 ent-1/NOTES.md；不得修改 telora-deps.json。不得读取 ontology/DESIGN.md、ontology/NOTES.md、ontology/bin-src/ 或 ontology/src/。使用获准的 bin/telora 命令验证。反馈必须来自具体建模观察。被恢复后在同一模型上复验 A2 修订并更新反馈。不得委派。",
+      "permission": {
+        "read": {"*": "deny", "experiment.json": "deny", "docs/**": "allow", "ontology/DSL-TUTORIAL.md": "allow", "ontology/AI3-CONTRACT.md": "allow", "ent-1/**": "allow"},
+        "glob": {"*": "deny", "experiment.json": "deny", "docs/**": "allow", "ent-1/**": "allow"},
+        "grep": {"*": "deny", "experiment.json": "deny", "docs/**": "allow", "ontology/DSL-TUTORIAL.md": "allow", "ontology/AI3-CONTRACT.md": "allow", "ent-1/**": "allow"},
+        "list": {"*": "deny", "docs": "allow", "ontology": "allow", "ent-1": "allow", "ent-1/**": "allow"},
+        "edit": {"*": "deny", "experiment.json": "deny", "ent-1/src/**": "allow", "ent-1/bin-src/**": "allow", "ent-1/FEEDBACK.md": "allow", "ent-1/NOTES.md": "allow"},
+        "bash": {"*": "deny", "./bin/telora run ent-1/bin-src/main.telora": "allow", "./bin/telora run ent-1/bin-src/test.telora": "allow", "./bin/telora types ent-1/bin-src/main.telora": "allow", "./bin/telora show ent-1/bin-src/main.telora": "allow"},
+        "task": "deny", "webfetch": "deny", "websearch": "deny", "external_directory": "deny"
+      }
+    }
+  }
+}

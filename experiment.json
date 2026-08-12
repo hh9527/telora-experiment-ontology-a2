@@ -1,0 +1,22 @@
+{
+  "schema": "telora.opencode-cloned-plan/v1",
+  "prompts": {
+    "start": "请执行本体 eDSL 的 A2-A3 反馈闭环实验。按照 coordinator 的职责调用 A2 和 A3，并在反馈后恢复原来的子会话；完成一轮创建、建模、反馈、修订和复验后报告结果。",
+    "continue": "请继续当前实验；恢复需要继续工作的原子 agent 会话，不要新建替代会话。"
+  },
+  "artifacts": [
+    {
+      "name": "telora",
+      "source": "target/debug/telora",
+      "to": "bin/telora",
+      "build": ["cargo", "build", "-p", "telora"],
+      "mode": "0555"
+    }
+  ],
+  "validation": [
+    {"name": "ontology", "command": ["bin/telora", "run", "ontology/bin-src/main.telora"], "required": true},
+    {"name": "enterprise", "command": ["bin/telora", "run", "ent-1/bin-src/main.telora"], "required": true}
+  ],
+  "observe": ["ontology", "ent-1"],
+  "archive": ["docs", "ontology", "ent-1", "opencode.json", "experiment.json"]
+}
