@@ -21,7 +21,9 @@ Before a run, record:
 - plan repository commit and origin;
 - hashes of `experiment.json` and `opencode.json`, and confirmation that the exact coordinator start
   prompt was used without a wrapper;
-- hashes of injected `LANG-TUTORIAL.md` and `DESIGN.md`;
+- hashes of `docs/LANG-TUTORIAL.md`, `docs/TELORA-CLI.md`,
+  `ontology/GOAL.md`, `ontology/DESIGN.md`, `ent-1/GOAL.md`, and
+  `ent-1/DOMAIN.md`;
 - repository revision and dirty-worktree state;
 - Telora binary revision;
 - model name and configuration for the coordinator and each subagent;
@@ -35,14 +37,14 @@ correction.
 
 ## A2 procedure
 
-A2 reads public `docs/`, its private design and `ontology/` artifacts, plus only
-`ent-1/FEEDBACK.md` after A3 has modeled. It executes only four exact
+A2 reads public `docs/`, its private `ontology/GOAL.md` and design, its own
+artifacts, plus only `ent-1/FEEDBACK.md` after A3 has modeled. It executes only four exact
 `bin/telora` command forms. The coordinator must retain A2's native child
 session ID and resume it for every feedback round. Run-specific task text must
 not be appended to the initial prompt.
 
 A3 reads public docs, A2's public tutorial and contract, its private
-`ent-1/DOMAIN.md`, and its own artifacts. It must not read A2's design, source,
+`ent-1/GOAL.md` and `ent-1/DOMAIN.md`, and its own artifacts. It must not read A2's goal, design, source,
 validation entries, or notes. Record the native child tree and verify that A2
 and A3 continuation did not create replacement children.
 

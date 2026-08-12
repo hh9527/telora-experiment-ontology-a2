@@ -14,6 +14,7 @@ docs/
 bin/
   telora                 # Host 注入的固定二进制
 ontology/
+  GOAL.md                # A2 的稳定任务定义
   DESIGN.md              # 仅 A2 可见的设计契约
   DSL-TUTORIAL.md        # A2 交付给企业作者的公开教程
   AI3-CONTRACT.md        # A2 交付给 A3 的公开契约
@@ -22,6 +23,7 @@ ontology/
   src/
   bin-src/
 ent-1/
+  GOAL.md                # A3 的稳定任务定义
   DOMAIN.md              # 仅 A3 可见的企业事实
   FEEDBACK.md            # A3 给 A2 的公开反馈
   NOTES.md               # A3 私有过程记录
@@ -30,7 +32,7 @@ ent-1/
   bin-src/
 ```
 
-共享目录不代表共享权限。A3 看不到 `ontology/DESIGN.md`、源码、验证入口和
+共享目录不代表共享权限。A3 看不到 `ontology/GOAL.md`、`ontology/DESIGN.md`、源码、验证入口和
 `NOTES.md`；A2 看不到 `ent-1/DOMAIN.md`、源码和 notes，只能在修订轮读取
 `ent-1/FEEDBACK.md`。coordinator 不写文件、不运行 Telora，只能调用 A2/A3 并
 读取少量公开交付和进度材料。coordinator 不是任务解释层：它的角色定义是一组

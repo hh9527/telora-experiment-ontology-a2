@@ -167,15 +167,8 @@ gate。
 
 ## 实现自由与约束
 
-A2 自行选择公共 API、文件布局、辅助函数、TypeMetadata family 形状、内部
-状态和算法。实现必须保持纯、确定、有类型且领域无关。
+公共 API、文件布局、辅助函数、TypeMetadata family 形状、内部状态和算法均为
+实现选择。实现必须保持纯、确定、有类型且领域无关。
 
 不得使用 `Any`、`Dyn`、String 标识、Host 原生图操作、隐藏的可变状态或复制
 仓库中的实现。必须使用普通 Telora 完成有界实现。
-
-交付物包括：
-
-- eDSL 源码；
-- 面向企业作者的 `DSL-TUTORIAL.md`；
-- 列出模型必要输入和 eDSL 保证的 `AI3_CONTRACT.md`；
-- 记录 API 选择、权衡和已知风险的 `STAGE2_NOTES.md`。
