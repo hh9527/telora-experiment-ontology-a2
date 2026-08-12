@@ -1,8 +1,8 @@
 {
   "schema": "telora.opencode-cloned-plan/v1",
   "prompts": {
-    "start": "请执行本体 eDSL 的 A2-A3 反馈闭环实验。按照 coordinator 的职责调用 A2 和 A3，并在反馈后恢复原来的子会话；完成一轮创建、建模、反馈、修订和复验后报告结果。",
-    "continue": "请继续当前实验；恢复需要继续工作的原子 agent 会话，不要新建替代会话。"
+    "start": "请开始实验。",
+    "continue": "请根据你的角色定义和当前可观察状态继续。"
   },
   "environment": {
     "OPENCODE_EXPERIMENTAL_OUTPUT_TOKEN_MAX": "128000"
