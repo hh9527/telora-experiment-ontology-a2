@@ -101,8 +101,11 @@ coordinator 按固定流程执行：A2 创建、A3 建模并反馈、恢复原 A
 
 挂起后或 coordinator 因上下文长度结束时，使用 `./oc-ctl continue t001`。该命令
 发送白名单指令 `恢复执行。`，开始一个轮次清零的新执行段，并要求 coordinator
-恢复需要继续的既有子会话。不要把一次 HTTP connection refusal 判断为 daemon
-死亡；客户端会对这种繁忙期瞬态失败重试。
+先重新读取公开反馈与交付文件，并与各角色最近一次已处理的内容版本比较：外部
+更新的 `ent-1/FEEDBACK.md` 会触发原 A2 会话，更新的 ontology 公开交付会触发
+原 A3 会话。文件变化优先于旧完成报告中的“已完成”结论；只有确认内容未变化后，
+coordinator 才能再次按既有状态挂起。不要把一次 HTTP connection refusal 判断为
+daemon 死亡；客户端会对这种繁忙期瞬态失败重试。
 
 实验完成后：
 

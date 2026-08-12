@@ -278,6 +278,78 @@ family 在值位置也是普通的有类型元数据能力。family 必须接收
 标识、payload、映射和计划使用模型提供的具体类型。不得用 `Any`、`Dyn` 或
 String 标识替代未知关系。
 
+## 当前实现限制与缓解方法
+
+本节描述当前实现中已经通过实验确认的边界。遇到这些边界时，应使用给出的
+有类型写法，不要用 `Any`、`Dyn` 或 String 标识绕过。
+
+### 多元素能力目录的类型推断
+
+多个能力记录直接写进同一个 Array 时，各元素的 singleton Atom 标识、闭包类型
+以及 `'Some`/`'None` 窄 variant 可能无法自动收敛到同一个 family 实例。典型表现
+是错误中出现很大的 variant union，或者数组元素类型彼此不一致。
+
+为每个构建函数声明完整的具体返回契约，再把构建结果放入数组：
+
+```telora
+type DimDef = DimensionDefinition(DimId, DimOutput, Entity, DimInput, Expr);
+
+def order_month: Fn() -> DimDef = fn() {
+    {
+        id: 'OrderMonth,
+        capability: { /* ... */ },
+        formula: { /* ... */ },
+    }
+};
+
+let dimensions: Array(DimDef) = [order_month(), customer_tier()];
+```
+
+同样的原则适用于 `QueryIntent` 等高阶 family 的记录字面量：当外围 family 无法
+从局部 singleton 值唯一确定时，给完整记录或具名构建函数添加 concrete family
+契约。巨大 union 错误应首先检查是否缺少这个公共期望类型。
+
+### enum payload 不能是匿名 Struct 类型
+
+`@enum` 声明中的 variant payload 必须引用具名类型。匿名 Struct payload 会报
+`variants.X.kind must be an Atom`：
+
+```telora
+# 不支持：Column 的 payload 是匿名 Struct 类型
+# @enum type Expr = { Column: {alias: String, column: String} };
+
+@struct type ColumnRef = {alias: String, column: String};
+@enum type Expr = {Column: ColumnRef};
+
+# 值位置的匿名记录仍然合法
+let expr: Expr = 'Column({alias: "o", column: "id"});
+```
+
+### 递归具体类型不能进入 family 契约
+
+递归 enum/struct 可以在局部具体上下文中求值，但当递归类型被另一个 family 的
+定义契约引用时，当前实现会拒绝该递归组件。例如，让
+`Dialect(Expr).render_expr` 返回递归 `SqlExpr` 会失败。
+
+可用缓解方法是把契约边界上的类型改成无环结构。例如，将一层函数表达式拆成：
+
+```telora
+@enum type Atom = {Column: ColumnRef, Literal: Value};
+@struct type FunctionExpr = {name: String, args: Array(Atom)};
+@enum type Expr = {Column: ColumnRef, Literal: Value, Function: FunctionExpr};
+```
+
+该写法允许一层函数，但不允许函数参数再次包含函数。需要真正递归的表达式树时，
+不能把这一缓解伪装成完整能力；应把它记录为 API 边界，等待语言实现支持递归类型
+进入 family 契约。
+
+### 泛型函数和外围类型参数
+
+多态函数不能作为“尚未实例化的普通值”依赖后续任意使用来决定全部类型参数。
+优先在调用点推断，必要时用 `@[...]` 显式应用，或给具名辅助函数声明完整契约。
+另外，泛型函数体内的局部类型标注不能引用外围模块级 `for` 引入的类型参数；把
+需要该参数的完整契约提升到模块级辅助函数上。
+
 ## String 与诊断
 
 普通字符串不进行插值。插值使用反引号：

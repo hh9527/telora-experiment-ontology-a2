@@ -11,7 +11,8 @@
 ```text
 Model := ModellingFactory(DomainKnowledge)
 Plan | Rejection := Model(QueryIntent)
-SQL := transform(Plan)
+SqlQuery := transform(Plan)
+SqlQuery := { sql: String, bindings: Array(Val) }
 ```
 
 ## 所有权边界
@@ -24,7 +25,7 @@ SQL := transform(Plan)
   完整性证据与需求收集
   路径选择与分类
   规范 Plan IR 与自动组装
-  确定性 Plan -> SQL transform
+  确定性 Plan -> 参数化 SQL transform
   诊断构造与发布策略
   原子发布编排
 
@@ -154,7 +155,7 @@ eDSL 至少为下列角色暴露可执行的 TypeMetadata family：
   静默忽略，也不得把这些扩展做成任意 SQL String。
 
 Model 必须把 QueryIntent 视为一个原子请求：任一必要能力或路径拒绝时，不发布
-部分 Plan 或部分 SQL。若实现对重复请求进行去重，其规范化策略必须公开、确定，
+部分 Plan 或部分 SqlQuery。若实现对重复请求进行去重，其规范化策略必须公开、确定，
 并在证据与 Plan 覆盖检查中可观察；否则保持原请求的逐项对应关系。
 
 ## 建模工厂与模型
@@ -172,11 +173,11 @@ API 名称与柯里化形式属于实现选择，但必须能够表达以下关�
 ```text
 make_model: DomainKnowledge -> Model
 make_plan_creator: Model -> Fn(QueryIntent) -> CompileResult(Plan)
-make_query_creator: Model -> Fn(QueryIntent) -> CompileResult(SQL)
+make_query_creator: Model -> Fn(QueryIntent) -> CompileResult(SqlQuery)
 ```
 
-`make_query_creator(model)` 必须在语义上等价于同一模型的 plan creator 与 SQL
-transform 的组合，不能存在一条绕过 Plan 的独立查询实现。
+`make_query_creator(model)` 必须在语义上等价于同一模型的 plan creator 与参数化
+SQL transform 的组合，不能存在一条绕过 Plan 的独立查询实现。
 
 ## 规范 Plan 与自动组装
 
@@ -200,12 +201,24 @@ Plan 必须由 eDSL 根据已验证的能力输出和所选关系自动组装。
 被 Plan 使用的非基点需求均有对应的所选关系路径；不得静默漏项、增加未请求项、
 用占位值补齐不同输出形状，或把所有备选路径写入 Plan。
 
-## 确定性 SQL 转换
+## 确定性参数化 SQL 转换
 
-公共 eDSL 必须提供 `Plan -> SQL` 的转换能力。它可以由 dialect 参数化，但对固定
-Plan 与固定 dialect 必须满足：
+公共 eDSL 必须提供 `Plan -> SqlQuery` 的转换能力，其中 SQL 执行计划至少具有
+以下概念形状（实现可以将该类型命名为 `SqlPlan`、`SqlQuery` 或等价名称）：
 
-- 纯且确定：相同输入产生逐字节相同的 SQL；
+```telora
+@struct type SqlQuery = {
+  sql: String,
+  bindings: Array(Val),
+};
+```
+
+`Val` 表示封闭的、可由数据库驱动绑定的值。实现可以使用等价的具名 sum type
+承载 String、Bytes、Int、Float、Bool 等值，但不得使用 `Any` 或预渲染 SQL
+片段替代它。转换可以由 dialect 参数化，但对固定 Plan 与固定 dialect 必须满足：
+
+- 纯且确定：相同输入产生结构相等的 SqlQuery，包括逐字节相同的 `sql` 和顺序
+  相同的 `bindings`；
 - 对任何已发布 Plan 均可完成，不再产生领域拒绝；
 - 不读取 Model 或领域目录，不重新查找能力、选择路径或判断授权；
 - 不根据展示 label 猜测表、列、表达式或 join；
@@ -213,9 +226,19 @@ Plan 与固定 dialect 必须满足：
 - 只生成查询语句，不产生写入或执行授权。
 
 企业可以提供 dialect 所需的结构化物理事实或有类型的叶节点渲染能力，但不能在
-transform 阶段重新作领域决策。String 可以承载表名、列名、alias 和字面量等原子
-叶节点；完整表达式、join predicate 和 SQL clause 必须保留结构，不能以预渲染
-String 替代。最终 SQL String 不是能力标识、路径选择输入或 Plan 的替代品。
+transform 阶段重新作领域决策。String 只可承载表名、列名、alias 等受约束的
+结构名称；运行时值不是 SQL 文本。完整表达式、join predicate 和 SQL clause
+必须保留结构，不能以预渲染 String 替代。
+
+值叶节点不得作为 SQL 文本拼接，也不得由 eDSL 执行 SQL literal escaping。
+每次值出现只在 `sql` 中产生一个 dialect 所规定的占位符，并把原始值追加到
+`bindings`。占位符数量、编号和 bindings 顺序必须由同一次确定性遍历产生并严格
+对应。同一表达式分别出现在 SELECT 与 GROUP BY 时，每次出现都贡献自己的
+占位符和 binding；不得依靠隐式共享或重排。
+
+表名、列名、alias、函数名和运算符属于 SQL 结构位置，不能成为 binding；它们
+必须来自 Plan 中受约束的结构化事实并由 dialect 确定性渲染。最终 SqlQuery 不是
+能力标识、路径选择输入或规范 Plan 的替代品。
 
 ## 诊断与决策通道
 
@@ -247,7 +270,7 @@ String 替代。最终 SQL String 不是能力标识、路径选择输入或 Pla
 - 彼此独立的下游诊断均已运行；
 - 规范 Plan 已由 eDSL 完整组装并通过覆盖检查。
 
-否则，结果被显式拒绝，并且不包含部分计划。
+否则，结果被显式拒绝，并且不包含部分计划、SQL 文本或 bindings。
 
 ## 企业扩展点
 
