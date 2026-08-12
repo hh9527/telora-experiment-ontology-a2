@@ -325,23 +325,23 @@ let dimensions: Array(DimDef) = [order_month(), customer_tier()];
 let expr: Expr = 'Column({alias: "o", column: "id"});
 ```
 
-### 递归具体类型不能进入 family 契约
+### Family 与递归具体类型
 
-递归 enum/struct 可以在局部具体上下文中求值，但当递归类型被另一个 family 的
-定义契约引用时，当前实现会拒绝该递归组件。例如，让
-`Dialect(Expr).render_expr` 返回递归 `SqlExpr` 会失败。
-
-可用缓解方法是把契约边界上的类型改成无环结构。例如，将一层函数表达式拆成：
+递归 enum/struct 在函数契约、参数化 family 契约和模块接口中保持精确类型，不会把
+递归位置擦除为 `Any`。Family 可以引用已经封闭的非参数化递归具体类型：
 
 ```telora
-@enum type Atom = {Column: ColumnRef, Literal: Value};
-@struct type FunctionExpr = {name: String, args: Array(Atom)};
-@enum type Expr = {Column: ColumnRef, Literal: Value, Function: FunctionExpr};
+@enum type Expr = {Literal: Value, Call: CallExpr};
+@struct type CallExpr = {name: String, args: Array(Expr)};
+
+@struct type Dialect(Context) = {
+    render: Fn(Context, Expr) -> String,
+};
 ```
 
-该写法允许一层函数，但不允许函数参数再次包含函数。需要真正递归的表达式树时，
-不能把这一缓解伪装成完整能力；应把它记录为 API 边界，等待语言实现支持递归类型
-进入 family 契约。
+递归类型可以经完整、选择性、alias 或 open import 进入其他模块的函数与 family
+契约。Family 自身不能参数化递归、形成循环 family component，也不能调用同模块
+普通 helper。
 
 ### 泛型函数和外围类型参数
 
