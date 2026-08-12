@@ -2,7 +2,7 @@
   "schema": "telora.opencode-cloned-plan/v1",
   "prompts": {
     "start": "请开始实验。",
-    "continue": "请根据当前状态继续实验。"
+    "continue": "恢复执行。"
   },
   "environment": {
     "OPENCODE_EXPERIMENTAL_OUTPUT_TOKEN_MAX": "128000"
@@ -18,7 +18,9 @@
   ],
   "validation": [
     {"name": "ontology", "command": ["bin/telora", "run", "ontology/bin-src/main.telora"], "required": true},
-    {"name": "enterprise", "command": ["bin/telora", "run", "ent-1/bin-src/main.telora"], "required": true}
+    {"name": "ontology-test", "command": ["bin/telora", "run", "ontology/bin-src/test.telora"], "required": true},
+    {"name": "enterprise", "command": ["bin/telora", "run", "ent-1/bin-src/main.telora"], "required": true},
+    {"name": "enterprise-test", "command": ["bin/telora", "run", "ent-1/bin-src/test.telora"], "required": true}
   ],
   "observe": ["ontology", "ent-1"],
   "archive": ["docs", "ontology", "ent-1", ".opencode", "opencode.json", "experiment.json"]

@@ -5,6 +5,10 @@
 A2-A3 反馈闭环。整个实验只有一个共享 Git workspace、一个 coordinator session、
 一个 TUI 和一个 daemon；A2、A3 是 coordinator 创建并恢复的原生子会话。
 
+实验检验的核心链条是：A2 创建领域无关的 `ModellingFactory`、规范 Plan IR 与
+确定性 SQL transform；A3 只声明企业领域知识并实例化 Model；查询意图经 Model
+自动得到 Plan，再由 Plan 得到 SQL。A3 不手工组装 Plan，也不绕过 Plan 拼 SQL。
+
 ## 工作区
 
 ```text
@@ -44,10 +48,14 @@ ent-1/
 固定提示只要求其遵循自身 agent prompt 与可见文件，不得转述、补充或改写任务
 定义。
 
+A2/A3 的角色协议都包含 Telora 自学规则。角色以公共语言/CLI 教程和自身可见代码
+为学习依据，并可在各自 `bin-src/` 下创建探索入口，通过 `telora run/types/show`
+验证不确定的常见写法；探索权限不改变角色间的文件可见性边界。
+
 所有角色协议均明确列出：收到的白名单指令或发生的状态、判断依据、唯一动作和
-完成标准。Host 只向 coordinator 发送 `请开始实验。` 或
-`请根据当前状态继续实验。`；coordinator 只向 A2/A3 发送各自角色文件列出的固定
-指令。白名单之外的文本不触发工作流动作。
+完成标准。Host 只向 coordinator 发送 `请开始实验。` 或 `恢复执行。`；
+coordinator 只向 A2/A3 发送各自角色文件列出的固定指令。白名单之外的文本不触发
+工作流动作。
 
 `.opencode/agents/*.md` 是 OpenCode 原生的角色配置：frontmatter 保存角色元数据
 和权限，正文保存角色提示词。`opencode.json` 只选择默认 coordinator。
@@ -79,7 +87,9 @@ TUI 准备好后，在控制会话启动 coordinator：
 ```
 
 coordinator 按固定流程执行：A2 创建、A3 建模并反馈、恢复原 A2 子会话修订、恢复
-原 A3 子会话复验。观察命令不会中断实验：
+原 A3 子会话复验。A3 每完成一次首次验证或增量复验计为一轮；任务完成且没有可
+解决问题，或从本次启动/恢复起完成 3 轮后，coordinator 默认挂起并等待 Host 指令。
+观察命令不会中断实验：
 
 ```bash
 ./oc-ctl status t001
@@ -89,7 +99,8 @@ coordinator 按固定流程执行：A2 创建、A3 建模并反馈、恢复原 A
 ./oc-ctl files t001
 ```
 
-如果 coordinator 因上下文长度结束，使用 `./oc-ctl continue t001`。该命令要求它
+挂起后或 coordinator 因上下文长度结束时，使用 `./oc-ctl continue t001`。该命令
+发送白名单指令 `恢复执行。`，开始一个轮次清零的新执行段，并要求 coordinator
 恢复需要继续的既有子会话。不要把一次 HTTP connection refusal 判断为 daemon
 死亡；客户端会对这种繁忙期瞬态失败重试。
 

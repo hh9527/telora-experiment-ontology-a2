@@ -1,8 +1,9 @@
 # A2 目标：实现可复用的本体 eDSL
 
 使用 Telora 实现 `ontology/DESIGN.md` 规定的可复用本体 eDSL，供不知道其内部
-实现的企业建模者作为 package 使用。实现完整覆盖设计契约中的语义角色、能力
-编译、路径选择与分类、诊断、构建器传输和原子发布协议。
+实现的企业建模者作为 package 使用。实现完整覆盖设计契约中的语义角色、建模
+工厂、能力编译、路径选择与分类、规范 Plan 自动组装、覆盖保证、确定性 SQL
+转换、诊断和原子发布协议。
 
 ## 稳定输入
 
@@ -24,11 +25,16 @@
 - `ontology/bin-src/test.telora`：覆盖关键拒绝路径和确定性规则的验证入口；
 - `ontology/DSL-TUTORIAL.md`：企业作者仅凭本文即可使用公共 API 的教程；
 - `ontology/AI3-CONTRACT.md`：列出企业模型必须提供的有类型输入、公共 API、
-  eDSL 保证以及验证入口；
+  QueryIntent 参考形状、eDSL 保证以及验证入口；
 - `ontology/NOTES.md`：记录 API 选择、权衡、验证结果和已知限制。
 
-不得修改 `ontology/telora-deps.json`。不得把企业实体、标识、表、列、SQL、公式
+不得修改 `ontology/telora-deps.json`。不得把企业实体、标识、表、列、具体 SQL、公式
 或物理映射实例写入可复用 package。
+
+成功入口必须实际展示：结构化领域知识经 factory 得到 model；同一个查询意图经
+model 得到规范 Plan；该 Plan 经公共 transform 得到确定 SQL；组合门面
+`make_query_creator(model)` 得到相同 SQL。测试入口必须固定 Plan 的请求覆盖、
+关系选择覆盖、转换确定性，以及拒绝结果没有部分 Plan/SQL。
 
 ## 验证
 

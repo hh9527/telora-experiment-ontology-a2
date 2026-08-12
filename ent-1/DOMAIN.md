@@ -27,7 +27,8 @@ Order -> Package
 Package -> PackageItem
 ```
 
-每个关系携带由企业所有的物理 mapping，至少表达源表、目标表和 join predicate。
+每个关系携带由企业所有的结构化物理 mapping，至少表达源表、目标表和等值 join
+两侧的列引用；不能只保存预渲染的 join predicate String。
 
 ## 指标与维度
 
@@ -45,11 +46,28 @@ Package -> PackageItem
 
 不同 natural grain 的指标不能自动组合。当前没有预聚合或 allocation policy。
 
+## 物理查询事实
+
+基础数据源是 `orders`。领域模型必须以公共 eDSL 要求的结构化关系表达式表达以下
+物理事实，使规范 Plan 自身足以被确定地转换为 SQL，而 transform 不需要反查
+模型。下列 SQL 写法定义预期语义，不授权把它们作为预渲染片段直接塞入 Plan：
+
+- `OrdersCreated`：`COUNT(orders.id)`；
+- `OrderMonth`：`substr(orders.created_at, 1, 7)`；
+- `CustomerTier`：`customers.tier`；
+- `OriginRegion`：`regions.name`；
+- `CarrierName`：`carriers.name`；
+- `ServiceName`：`service_levels.name`。
+
+每条安全关系的物理 mapping 必须足以生成对应的只读 join。SQL 转换采用公共 eDSL
+支持的默认 dialect；同一个规范 Plan 必须产生逐字节相同的 SQL。
+
 ## 可见验证场景
 
 合法场景：`OrdersCreated`，按 `OrderMonth`、`CustomerTier`、`OriginRegion`、
-`CarrierName` 和 `ServiceName` 分组。它应发布 Order grain 的只读计划，并保留到
-这些实体的安全关系和物理 mapping。
+`CarrierName` 和 `ServiceName` 分组。它应发布 Order grain 的只读规范 Plan，
+完整保留全部请求投影、grouping、到这些实体的安全关系和物理 mapping，并由该
+Plan 生成包含 `SELECT`、`FROM orders`、五个必要 join 与对应 `GROUP BY` 的 SQL。
 
 非法场景：`OrdersCreated`，按 `ProductCategory` 和 `DeliveryException` 分组。
 一次结果必须同时保留：
@@ -57,5 +75,6 @@ Package -> PackageItem
 - `DeliveryException` 缺少获准 capability；
 - `ProductCategory` 从 Order grain 只能经 fan-out 到达；
 - 不发布任何部分计划。
+- 不产生任何 SQL。
 
 最终计划 revision 固定为 `logistics-ontology-v1`。
