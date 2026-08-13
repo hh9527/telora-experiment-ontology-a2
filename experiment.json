@@ -17,10 +17,10 @@
     }
   ],
   "validation": [
-    {"name": "ontology", "command": ["bin/telora", "run", "ontology/bin-src/main.telora"], "required": true},
-    {"name": "ontology-test", "command": ["bin/telora", "run", "ontology/bin-src/test.telora"], "required": true},
-    {"name": "enterprise", "command": ["bin/telora", "run", "ent-1/bin-src/main.telora"], "required": true},
-    {"name": "enterprise-test", "command": ["bin/telora", "run", "ent-1/bin-src/test.telora"], "required": true}
+    {"name": "ontology", "cwd": "ontology", "command": ["../bin/telora", "run", "main"], "required": true},
+    {"name": "ontology-test", "cwd": "ontology", "command": ["../bin/telora", "check", "@test/ontology.telora"], "required": true},
+    {"name": "enterprise", "cwd": "ent-1", "command": ["../bin/telora", "run", "main"], "required": true},
+    {"name": "enterprise-test", "cwd": "ent-1", "command": ["../bin/telora", "check", "@test/logistics.telora"], "required": true}
   ],
   "observe": ["ontology", "ent-1"],
   "archive": ["docs", "ontology", "ent-1", ".opencode", "opencode.json", "experiment.json"]

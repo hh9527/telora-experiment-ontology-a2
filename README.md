@@ -25,7 +25,8 @@ ontology/
   NOTES.md               # A2 私有过程记录
   telora-deps.json
   src/
-  bin-src/
+    bin/
+  tests/
 ent-1/
   GOAL.md                # A3 的稳定任务定义
   DOMAIN.md              # 仅 A3 可见的企业事实
@@ -33,7 +34,8 @@ ent-1/
   NOTES.md               # A3 私有过程记录
   telora-deps.json
   src/
-  bin-src/
+    bin/
+  tests/
 .opencode/agents/
   coordinator.md         # 协调角色元数据与状态转换协议
   a2.md                  # A2 角色元数据与提示词
@@ -50,8 +52,8 @@ ent-1/
 
 A2/A3 的角色协议都包含 Telora 自学规则。首次启动时，A2 实现 eDSL，A3 同时只
 学习公共语言/CLI 教程并分析企业题面；A2 公开交付就绪后，A3 才读取 eDSL 教程
-和契约并开始建模。正式探索可在各自 `bin-src/` 下创建入口，通过
-`telora run/types/show` 验证；探索权限不改变角色间的文件可见性边界。
+和契约并开始建模。正式探索可在各自 `src/bin/` 下创建入口，通过
+`telora run/show` 验证；探索权限不改变角色间的文件可见性边界。
 
 所有角色协议均明确列出：收到的白名单指令或发生的状态、判断依据、唯一动作和
 完成标准。Host 只向 coordinator 发送 `请开始实验。` 或 `恢复执行。`；

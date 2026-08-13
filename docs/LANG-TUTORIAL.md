@@ -278,6 +278,76 @@ family 在值位置也是普通的有类型元数据能力。family 必须接收
 标识、payload、映射和计划使用模型提供的具体类型。不得用 `Any`、`Dyn` 或
 String 标识替代未知关系。
 
+## JSON、codec 与 schema
+
+JSON 值是 Telora 的普通不可变值。`std/json` 负责 JSON 文本和 schema，
+`std/codec` 根据 TypeMetadata 在 JSON 值与有类型值之间转换：
+
+```telora
+import "std/codec" as codec;
+import "std/json" as json;
+import "std/result" as result;
+
+@struct
+type Query = {
+    subject: String,
+    limit: Int,
+};
+
+let raw = json.parse("{\"subject\":\"orders\",\"limit\":20}")
+    |> result.unwrap;
+let query: Query = codec.decode(Query, raw) |> result.unwrap;
+let encoded = codec.encode(Query, query) |> result.unwrap;
+let compact: String = json.stringify(encoded);
+let pretty: String = encoded |> json.stringify_pretty(2);
+let query_schema = json.schema(Query);
+```
+
+也可以用 `json.decode(Query, text)` 直接把 JSON 文本解码成 `Query`。两条路径的
+区别是边界位置：`json.parse` 只解析文本并返回 JSON 值；`codec.decode` 对已经
+存在的 JSON 值施加类型契约。`codec.encode` 返回 JSON 值，只有需要文本边界时
+才调用 `json.stringify` 或 `json.stringify_pretty`。
+
+上述 parse、decode 和 encode 都返回 `Result(..., BlameError)`。只有输入无效确实
+违反当前程序不变量时才使用 `result.unwrap`；可预期的外部输入错误应通过 `match`
+保留为显式拒绝或诊断。Codec 失败不会发布部分解码值。
+
+Struct 和 enum 默认从同一份 TypeMetadata 派生 codec 与 JSON schema。常用的
+`std/json` decorator 可以显式调整其 JSON 表示：
+
+```telora
+@json.rename_all('CamelCase)
+@struct
+type Details = {
+    order_id: String,
+    @json.default('None)
+    note: Option(String),
+};
+
+@struct
+type Envelope = {
+    kind: String,
+    @json.flatten details: Details,
+};
+
+@json.untagged
+@enum
+type Scalar = {
+    Text: String,
+    Count: Int,
+};
+```
+
+此外可以用 `@json.rename("name")` 改写单个字段名，用
+`@json.skip_serializing_if('None)`、`@json.skip_serializing_if('Empty)` 或一个返回
+Bool 的函数省略满足条件的字段。Decorator 是产生 attribute 的普通元数据函数；
+codec 和 schema 读取相同 attribute，因此二者不会形成两套独立模型。
+
+JSON/TOML/YAML 文件也可以作为静态数据模块 import。它们在封闭模块图建立时由
+Host 加载，不是运行时文件 IO；JSON 解析严格拒绝重复 key，并保留字段来源。
+不要为了打印中间值而手写 `*_desc` 函数：公开结果需要稳定 JSON 形状时使用
+codec，需要临时观察任意局部值时则应使用专门的 debug 能力。
+
 ## 当前实现限制与缓解方法
 
 本节描述当前实现中已经通过实验确认的边界。遇到这些边界时，应使用给出的
@@ -394,15 +464,15 @@ export { Entity, Requirement, compile };
 import 是静态的。模块只暴露显式 export。eDSL 必须导出向企业作者承诺的每个
 类型和函数。
 
-`ontology/bin-src/` 或 `ent-1/bin-src/` 下的入口是由 Host 选择的根入口，不是位于相应 `src/` 旁边的源码
-模块。从该入口导入可复用代码时，应使用显式源码根路径：
+`ontology/src/bin/` 或 `ent-1/src/bin/` 下的入口由 Host 以 `@bin/...` 选择；
+`tests/` 下的入口以 `@test/...` 选择。从这些入口导入可复用代码时，应使用显式源码根路径：
 
 ```telora
-# ontology/bin-src/main.telora
+# ontology/src/bin/main.telora
 import "@src/ontology.telora" { compile };
 ```
 
-在 `bin-src/` 入口中，`./ontology.telora` 以及其他 `./` 或 `../` import 非法。
+在 binary/test 入口中，`./ontology.telora` 以及其他 `./` 或 `../` import 非法。
 在 `src/` 下的模块中，相对 import 仍然合法，并从导入模块的逻辑目录解析。
 `@src/` 始终从导入模块所属 crate 的源码根解析。`ontology-lib/types.telora`
 等 package 路径选择由 crate manifest 固定的依赖；`std/...` 选择由 Host 注册的

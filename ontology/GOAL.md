@@ -14,15 +14,15 @@
 - `ontology/GOAL.md`；
 - `ontology/DESIGN.md`。
 
-不得从 `ent-1/DOMAIN.md`、`ent-1/src/` 或 `ent-1/bin-src/` 获取企业领域信息。
+不得从 `ent-1/DOMAIN.md`、`ent-1/src/` 或 `ent-1/tests/` 获取企业领域信息。
 
 ## 交付物
 
 完成并保持下列交付：
 
 - `ontology/src/`：领域无关的可复用 Telora package 源码；
-- `ontology/bin-src/main.telora`：展示完整成功路径的可执行入口；
-- `ontology/bin-src/test.telora`：覆盖关键拒绝路径和确定性规则的验证入口；
+- `ontology/src/bin/main.telora`：展示完整成功路径的可执行入口；
+- `ontology/tests/ontology.telora`：覆盖关键拒绝路径和确定性规则的验证入口；
 - `ontology/DSL-TUTORIAL.md`：企业作者仅凭本文即可使用公共 API 的教程；
 - `ontology/AI3-CONTRACT.md`：列出企业模型必须提供的有类型输入、公共 API、
   QueryIntent 参考形状、eDSL 保证以及验证入口；
@@ -41,10 +41,10 @@ model 得到规范 Plan；该 Plan 经公共 transform 得到确定 SQL；组合
 实际运行并根据结果修正实现：
 
 ```text
-./bin/telora run ontology/bin-src/main.telora
-./bin/telora run ontology/bin-src/test.telora
-./bin/telora types ontology/bin-src/main.telora
-./bin/telora show ontology/bin-src/main.telora
+cd ontology
+../bin/telora run main
+../bin/telora check @test/ontology.telora
+../bin/telora show @bin/main.telora
 ```
 
 完成时报告实际交付物、真实验证结果和仍存在的限制，不要求 Git commit。

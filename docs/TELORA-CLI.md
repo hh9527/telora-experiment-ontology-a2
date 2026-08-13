@@ -1,49 +1,29 @@
-# Telora validation workflow
+# Telora 验证流程
 
-The workspace provides a fixed Telora validation interface. Run commands from
-the workspace root.
+每个 Telora crate 的可复用模块位于 `src/`，应用入口位于 `src/bin/`，测试入口位于
+`tests/`。`telora-deps.json` 固定该 crate 的依赖边界，不得修改。
 
-## Layout
-
-Each Telora crate contains its reusable modules in `src/` and validation
-entries in `bin-src/`.
-
-The ontology crate is `ontology/`; the first enterprise model is `ent-1/`.
-Use each crate's `bin-src/main.telora` as its main validation entry and
-`bin-src/test.telora` as its focused validation entry.
-
-Each crate's `telora-deps.json` fixes its dependency boundary. Do not modify it.
-
-## Commands
-
-The following commands are the complete executable interface available in the
-experiment:
+命令必须从目标 crate 根目录执行。Telora 从当前目录向上查找最近的
+`telora-deps.json`，命令参数使用稳定逻辑模块 ID，不使用物理文件名：
 
 ```text
-./bin/telora run <crate>/bin-src/main.telora
-./bin/telora run <crate>/bin-src/test.telora
-./bin/telora types <crate>/bin-src/main.telora
-./bin/telora show <crate>/bin-src/main.telora
+cd ontology
+../bin/telora run main
+../bin/telora check @test/ontology.telora
+../bin/telora show @bin/main.telora
+../bin/telora show @src/ontology.telora -k type,let,def,import
+../bin/telora show @src/ontology.telora --exports
+../bin/telora show @src/ontology.telora --at 12:4
 ```
 
-- `run` evaluates the selected entry and prints its exported
-  `output` value.
-- the second `run` form evaluates `bin-src/test.telora` and prints its exported
-  `output` value.
-- `types` prints the inferred types for the main entry. It is the module-level type summary: quantified
-  definitions retain their `for(...)` schemes, and internal function
-  parameters are not listed as module bindings.
-- `show` prints the semantic snapshot for the main entry,
-  including diagnostics, modules, definitions, references, expressions, and
-  types. Generic definition rows retain their quantified schemes. Nested
-  parameter and expression rows are uninstantiated debug facts; an `Any` on
-  those rows does not replace the enclosing definition's displayed scheme.
-Each command preserves Telora's standard output, standard error, and exit
-status. A zero exit status means that the requested operation succeeded. A
-nonzero exit status means that Telora or the wrapper rejected it; read the
-diagnostic, revise the source, and run the relevant command again.
+企业 crate 同理，在 `ent-1/` 下运行 `run main`，并以
+`check @test/logistics.telora` 检查测试入口。
 
-The wrappers accept no source paths or semantic-query positions. They do not
-discover files, mutate source, or run multiple validation entries. Rewrite
-`test.telora` when a behavior should be tested independently from
-`main.telora`.
+- `run name` 固定执行 `@bin/name.telora` 并打印其 export `output`。
+- `show` 输出 JSONL 语义记录；默认列出选中模块的顶层 local definitions。
+- `-p` 按名称的大小写敏感字面子串过滤，不是 glob 或正则。
+- `-k` 按 `type,let,def,import` 过滤；`--exports` 改查公共接口。
+- `--at line[:column]` 独立查询与位置相交的语义事实。
+
+命令退出码为零表示请求成功；非零表示 CLI 或 Telora 拒绝。`show` 的空匹配成功且
+没有输出。记录中的 `authority` 区分 `authoritative`、`recovery` 与 `debug` 事实。
