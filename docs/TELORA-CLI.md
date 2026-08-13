@@ -34,6 +34,9 @@ Telora 从当前目录向上查找最近的 `telora-deps.json`，因此命令可
 - `-p` 按名称的大小写敏感字面子串过滤，不是 glob 或正则。
 - `-k` 接受逗号分隔的 `type,let,def,import`；`--exports` 改查公共接口并与 `-k`
   互斥。
+- Namespace import 的记录用 `target` 给出目标模块 ID，不带普通值 `type`；用
+  `show <target> --exports` 查询其成员的精确 type/scheme。Selective import 的记录
+  直接携带所选成员的精确 type/scheme。
 - `--at line[:column]` 使用从一开始计数的位置：行号选择与该行相交的事实，行列选择
   覆盖该点的事实；它与 `-p`、`-k`、`--exports` 互斥。
 
