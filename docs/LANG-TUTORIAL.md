@@ -452,7 +452,7 @@ let expr: Expr = 'Column({alias: "o", column: "id"});
 
 `codec.encode(Type, value)` 的首个参数是与值静态类型匹配的 `TypeOf(A)` witness。
 对于参数很多的 concrete family，在每个调用点重复全部 family 实参既冗长又容易
-漂移。当前做法是在定义模块中建立一次 concrete type alias，并导出 alias 或有类型
+漂移。规范做法是在定义模块中建立一次 concrete type alias，并导出 alias 或有类型
 的边界函数：
 
 ```telora
@@ -469,8 +469,9 @@ def encode_rejection = fn(value: Rejection) {
 export { Rejection, encode_rejection };
 ```
 
-下游调用 `encode_rejection(value)`，不重建完整 TypeMetadata。Alias 和函数契约仍由
-静态检查，不从运行时值反射类型。不要把值打包为 `Any`/`Dyn` 后猜测 witness。
+下游调用 `encode_rejection(value)`，不重建完整 TypeMetadata。该方式同样覆盖跨模块
+调用和包含封闭递归类型参数的 family。Alias 和函数契约仍由静态检查，不从运行时值
+反射类型；不要把值打包为 `Any`/`Dyn` 后猜测 witness。
 
 ### Bytes 没有默认 JSON 表示
 
