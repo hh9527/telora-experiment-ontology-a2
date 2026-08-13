@@ -41,10 +41,9 @@ model 得到规范 Plan；该 Plan 经公共 transform 得到确定 SQL；组合
 实际运行并根据结果修正实现：
 
 ```text
-cd ontology
-../bin/telora run main
-../bin/telora check @test/ontology.telora
-../bin/telora show @bin/main.telora
+./bin/telora run main -C ontology
+./bin/telora check @test/ontology.telora -C ontology
+./bin/telora show @bin/main.telora -C ontology
 ```
 
 完成时报告实际交付物、真实验证结果和仍存在的限制，不要求 Git commit。

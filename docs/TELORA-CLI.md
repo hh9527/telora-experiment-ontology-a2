@@ -8,15 +8,13 @@ Telora 从当前目录向上查找最近的 `telora-deps.json`，因此命令可
 命令参数使用稳定逻辑模块 ID，不使用物理文件名：
 
 ```text
-cd ontology
-../bin/telora run main
-../bin/telora run main -C path/to/context
-../bin/telora run -S path/to/file.telora
-../bin/telora check @test/ontology.telora
-../bin/telora show @bin/main.telora
-../bin/telora show @src/ontology.telora -k type,let,def,import
-../bin/telora show @src/ontology.telora --exports
-../bin/telora show @src/ontology.telora --at 12:4
+./bin/telora run main -C ontology
+./bin/telora check @test/ontology.telora -C ontology
+./bin/telora show @bin/main.telora -C ontology
+./bin/telora show @src/ontology.telora -C ontology -k type,let,def,import
+./bin/telora show @src/ontology.telora -C ontology --exports
+./bin/telora show @src/ontology.telora -C ontology --at 12:4
+./bin/telora run -S path/to/file.telora
 ```
 
 企业 crate 同理，在 `ent-1/` 下运行 `run main`，并以
@@ -28,7 +26,8 @@ cd ontology
 - `run -S file` 进入 standalone 模式，不发现 manifest，只使用根文件内的
   `crate.dependency` / `crate.format` options；这些 options 相对文件父目录解析。
   `-S` 与 binary name、`-C` 互斥。
-- `check` 和 `show` 接受完整稳定模块 ID；`check @test/...` 检查测试入口，`run` 只
+- `run`、`check` 和 `show` 的 `-C context` 都从 `context` 开始向上发现 manifest；
+  `check` 和 `show` 接受完整稳定模块 ID，`check @test/...` 检查测试入口，`run` 只
   接受 binary name。
 - `show` 输出 `telora.show/v1` JSONL 语义记录；默认列出选中模块的顶层 local
   definitions。

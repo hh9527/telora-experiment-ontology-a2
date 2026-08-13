@@ -46,10 +46,9 @@ let sql = query_request |> make_query_creator(model);
 实际运行并根据结果修正企业模型：
 
 ```text
-cd ent-1
-../bin/telora run main
-../bin/telora check @test/logistics.telora
-../bin/telora show @bin/main.telora
+./bin/telora run main -C ent-1
+./bin/telora check @test/logistics.telora -C ent-1
+./bin/telora show @bin/main.telora -C ent-1
 ```
 
 完成时报告实际交付物、真实验证结果和具体反馈，不要求 Git commit。

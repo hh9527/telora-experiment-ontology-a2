@@ -572,9 +572,8 @@ Host 从当前目录向上查找最近的 `telora-deps.json`，因此可以在 c
 `.telora` 后缀的单个 stem。`@main` 不是模块 ID。完整示例：
 
 ```text
-cd ontology
-../bin/telora run main
-../bin/telora check @test/ontology.telora
+./bin/telora run main -C ontology
+./bin/telora check @test/ontology.telora -C ontology
 ```
 
 在 binary/test 入口中，`./ontology.telora` 以及其他 `./` 或 `../` import 非法。
