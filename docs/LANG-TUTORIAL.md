@@ -472,11 +472,36 @@ import 是静态的。模块只暴露显式 export。eDSL 必须导出向企业�
 import "@src/ontology.telora" { compile };
 ```
 
+稳定逻辑模块 ID 与 crate 布局一一对应：
+
+```text
+@src/model.telora       -> <crate>/src/model.telora
+@bin/main.telora        -> <crate>/src/bin/main.telora
+@test/ontology.telora   -> <crate>/tests/ontology.telora
+ontology-lib/types.telora -> <ontology-lib>/src/types.telora
+```
+
+Host 从当前目录向上查找最近的 `telora-deps.json`，因此可以在 crate 根目录或其任意
+子目录运行命令。`run main` 选择 `@bin/main.telora`；binary name 是不含路径分隔符和
+`.telora` 后缀的单个 stem。`@main` 不是模块 ID。完整示例：
+
+```text
+cd ontology
+../bin/telora run main
+../bin/telora check @test/ontology.telora
+```
+
 在 binary/test 入口中，`./ontology.telora` 以及其他 `./` 或 `../` import 非法。
 在 `src/` 下的模块中，相对 import 仍然合法，并从导入模块的逻辑目录解析。
 `@src/` 始终从导入模块所属 crate 的源码根解析。`ontology-lib/types.telora`
 等 package 路径选择由 crate manifest 固定的依赖；`std/...` 选择由 Host 注册的
-内置模块。
+内置模块。依赖只公开自身的 `src/`，不公开 `src/bin/` 或 `tests/`。
+
+单文件探索使用 `telora run -S path/to/file.telora`。该模式不查找
+`telora-deps.json`，即使文件祖先目录中存在 manifest；它只接受根文件中声明的
+`crate.dependency` 和 `crate.format` resolver options，并相对根文件所在目录解析。
+普通 crate 模块不能声明这些 resolver options，被 standalone 根导入的模块也不能
+再次声明它们。
 
 ## 递归与有界工作
 
