@@ -213,9 +213,10 @@ Plan 必须由 eDSL 根据已验证的能力输出和所选关系自动组装。
 };
 ```
 
-`Val` 表示封闭的、可由数据库驱动绑定的值。实现可以使用等价的具名 sum type
-承载 String、Bytes、Int、Float、Bool 等值，但不得使用 `Any` 或预渲染 SQL
-片段替代它。转换可以由 dialect 参数化，但对固定 Plan 与固定 dialect 必须满足：
+`Val` 表示封闭的、可由数据库驱动绑定的值。本实验的 sum type 只需承载 String、
+Int、Float 和 Bool，不包含 Bytes；二进制绑定超出本实验范围。不得使用 `Any` 或
+预渲染 SQL 片段替代它。转换可以由 dialect 参数化，但对固定 Plan 与固定 dialect
+必须满足：
 
 - 纯且确定：相同输入产生结构相等的 SqlQuery，包括逐字节相同的 `sql` 和顺序
   相同的 `bindings`；

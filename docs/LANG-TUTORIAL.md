@@ -430,7 +430,64 @@ let expr: Expr = 'Column({alias: "o", column: "id"});
 
 递归类型可以经完整、选择性、alias 或 open import 进入其他模块的函数与 family
 契约。Family 自身不能参数化递归、形成循环 family component，也不能调用同模块
-普通 helper。
+普通 helper。需要共享递归骨架时，把递归部分封闭为 concrete type，只在递归结构
+之外参数化使用它的 capability、renderer 或 dialect：
+
+```telora
+@enum type Expr = {Literal: Value, Call: CallExpr};
+@struct type CallExpr = {name: String, args: Array(Expr)};
+
+@struct type Renderer(Context) = {
+    render: Fn(Context, Expr) -> String,
+};
+```
+
+不同方言需要不同叶节点集合时，分别声明封闭的递归类型，或先把所有允许叶节点
+建模为一个闭合 enum；不要尝试声明递归 family，也不要用 `Any`/`Dyn` 模拟开放递归。
+
+### 复杂 family 值的 codec witness
+
+`codec.encode(Type, value)` 的首个参数是与值静态类型匹配的 `TypeOf(A)` witness。
+对于参数很多的 concrete family，在每个调用点重复全部 family 实参既冗长又容易
+漂移。当前做法是在定义模块中建立一次 concrete type alias，并导出 alias 或有类型
+的边界函数：
+
+```telora
+import "std/codec" as codec;
+
+type Rejection = RejectionPayload(
+    Entity, Dimension, Measure, QueryIntent, Expr, Plan, SqlQuery
+);
+
+def encode_rejection = fn(value: Rejection) {
+    codec.encode(Rejection, value)
+};
+
+export { Rejection, encode_rejection };
+```
+
+下游调用 `encode_rejection(value)`，不重建完整 TypeMetadata。Alias 和函数契约仍由
+静态检查，不从运行时值反射类型。不要把值打包为 `Any`/`Dyn` 后猜测 witness。
+
+### Bytes 没有默认 JSON 表示
+
+JSON 没有原生 Bytes 类别，当前 codec 和 schema 不为 `Bytes` 选择隐式文本编码。
+包含裸 `Bytes` 的类型不能作为完整 JSON codec/schema 边界。设计需要稳定 JSON
+codec/schema 的 eDSL 时，当前应从公共 `Val`、Model、Plan 和输出类型中排除 Bytes：
+
+```telora
+@enum type Val = {
+    String: String,
+    Int: Int,
+    Float: Float,
+    Bool: Bool,
+};
+```
+
+若领域要求本身必须携带二进制数据，把它记录为当前 eDSL 无法覆盖的边界，不自行
+选择 Base64、tagged object 或其他协议。不要用 String 假装 Bytes，也不要通过手写
+JSON、`Any` 或 `Dyn` 绕过该限制。Array 元素、enum payload 和根 Bytes 同样没有
+隐式表示。
 
 ### 泛型函数和外围类型参数
 
