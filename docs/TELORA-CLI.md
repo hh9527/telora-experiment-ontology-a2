@@ -38,6 +38,18 @@ cd ontology
 - `--at line[:column]` 使用从一开始计数的位置：行号选择与该行相交的事实，行列选择
   覆盖该点的事实；它与 `-p`、`-k`、`--exports` 互斥。
 
+程序中的 `dbg!(expr)` 和 `expr.dbg!()` 把旁路观察写入 stderr，不改变 stdout 的
+`output`。每个事件是一行紧凑 JSON：
+
+```json
+{"name":"var","repr":"3","module":"@bin/main.telora","line":12}
+{"name":"plan","repr":"{...}","module":"@bin/main.telora","line":13,"message":"generated"}
+```
+
+固定字段为 `name`、`repr`、`module`、`line`；只有显式 message 时才有 `message`。
+`repr` 是有界 debug 表示，不是可反序列化的 JSON 值。Host 是否输出或丢弃事件对
+Telora 程序不可感知。
+
 命令退出码为零表示请求成功；非零表示 CLI 或 Telora 拒绝。`show` 的空匹配成功且
 没有输出。记录中的 `authority` 区分 `authoritative`、`recovery` 与 `debug` 事实。
 表达式级记录属于 `debug`；错误恢复记录的 authority 服从其事实和模块状态。

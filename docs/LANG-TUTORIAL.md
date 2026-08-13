@@ -346,7 +346,26 @@ codec 和 schema 读取相同 attribute，因此二者不会形成两套独立�
 JSON/TOML/YAML 文件也可以作为静态数据模块 import。它们在封闭模块图建立时由
 Host 加载，不是运行时文件 IO；JSON 解析严格拒绝重复 key，并保留字段来源。
 不要为了打印中间值而手写 `*_desc` 函数：公开结果需要稳定 JSON 形状时使用
-codec，需要临时观察任意局部值时则应使用专门的 debug 能力。
+codec，需要临时观察任意局部值时使用 `dbg!`：
+
+```telora
+let plan = dbg!(make_plan(model, request));
+let checked = plan.dbg!("before lowering");
+```
+
+`dbg!` 返回原值并保留其精确类型，因此可以直接插入表达式或管道。后置写法是通用
+contextual intrinsic 糖：`value.dbg!("message")` 等价于
+`dbg!(value, "message")`。message 必须是 String literal。
+
+`telora run` 把观察写到 stderr，每行是一个 JSON object：
+
+```json
+{"name":"plan","repr":"{...}","module":"@src/query.telora","line":42,"message":"before lowering"}
+```
+
+`name` 是被观察表达式的源码文本，`repr` 是有界、确定且能处理 cycle 的临时表示。
+它不是 JSON 编码契约。稳定结构化边界使用 codec，长期面向人的领域摘要应显式建模。
+`dbg!` 不捕获其他局部变量，也不应观察敏感值或作为生产日志接口。
 
 ## 当前实现限制与缓解方法
 
@@ -438,6 +457,11 @@ let warning = emit_warn!("fallback policy used", authored_subject);
 let ignored = emit_error!("missing capability", authored_subject);
 raise!(error)
 ```
+
+Contextual intrinsic 支持 `receiver.ident!(arguments...)` 后置糖，严格等价于把 receiver
+放到前置调用的第一个参数。例如 `error.raise!()` 等价于 `raise!(error)`，
+`"missing capability".blame!(authored_subject)` 等价于上面的 `blame!` 调用。它不是
+method lookup，也不允许调用未由语言定义的 intrinsic。
 
 - `blame!` 构造带来源的 `BlameError` 值，但不报告它。
 - `report` 发布诊断，并返回同一个错误。
