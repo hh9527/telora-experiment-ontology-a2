@@ -433,8 +433,9 @@ let expr: Expr = 'Column({alias: "o", column: "id"});
 
 递归类型可以经完整、选择性、alias 或 open import 进入其他模块的函数与 family
 契约。Family 自身不能参数化递归、形成循环 family component，也不能调用同模块
-普通 helper。需要共享递归骨架时，把递归部分封闭为 concrete type，只在递归结构
-之外参数化使用它的 capability、renderer 或 dialect：
+普通 helper；这是稳定的设计边界，不是待补齐的推断能力。需要共享递归骨架时，把
+递归部分封闭为 concrete type，只在递归结构之外参数化使用它的 capability、renderer
+或 dialect：
 
 ```telora
 @enum type Expr = {Literal: Value, Call: CallExpr};
