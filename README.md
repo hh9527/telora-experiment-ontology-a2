@@ -2,7 +2,7 @@
 
 本仓库是一个可直接 clone 的 opencode 实验计划，在 Telora 主仓库中以 submodule
 固定 revision。它用 opencode 原生 coordinator/subagent/session-resume 能力运行
-A2-A3 反馈闭环。整个实验只有一个共享 Git workspace、一个 coordinator session、
+一次确定的 A2-A3 交付，并由 Host 显式驱动反馈修订。整个实验只有一个共享 Git workspace、一个 coordinator session、
 一个 TUI 和一个 daemon；A2、A3 是 coordinator 创建并恢复的原生子会话。
 
 实验检验的核心链条是：A2 创建领域无关的 `ModellingFactory`、规范 Plan IR 与
@@ -48,9 +48,10 @@ ent-1/
 固定提示只要求其遵循自身 agent prompt 与可见文件，不得转述、补充或改写任务
 定义。
 
-A2/A3 的角色协议都包含 Telora 自学规则。角色以公共语言/CLI 教程和自身可见代码
-为学习依据，并可在各自 `bin-src/` 下创建探索入口，通过 `telora run/types/show`
-验证不确定的常见写法；探索权限不改变角色间的文件可见性边界。
+A2/A3 的角色协议都包含 Telora 自学规则。首次启动时，A2 实现 eDSL，A3 同时只
+学习公共语言/CLI 教程并分析企业题面；A2 公开交付就绪后，A3 才读取 eDSL 教程
+和契约并开始建模。正式探索可在各自 `bin-src/` 下创建入口，通过
+`telora run/types/show` 验证；探索权限不改变角色间的文件可见性边界。
 
 所有角色协议均明确列出：收到的白名单指令或发生的状态、判断依据、唯一动作和
 完成标准。Host 只向 coordinator 发送 `请开始实验。` 或 `恢复执行。`；
@@ -86,9 +87,9 @@ TUI 准备好后，在控制会话启动 coordinator：
 ./oc-ctl start t001
 ```
 
-coordinator 按固定流程执行：A2 创建、A3 建模并反馈、恢复原 A2 子会话修订、恢复
-原 A3 子会话复验。A3 每完成一次首次验证或增量复验计为一轮；任务完成且没有可
-解决问题，或从本次启动/恢复起完成 3 轮后，coordinator 默认挂起并等待 Host 指令。
+coordinator 按固定首次流程执行：并行启动 A2 首次实现和 A3 语言/领域准备，等待
+A2 公开交付后恢复原 A3 完成建模与原始反馈，然后无条件挂起。它不会自动把原始
+反馈交给 A2，也不判断任务是否收敛。
 观察命令不会中断实验：
 
 ```bash
@@ -99,13 +100,12 @@ coordinator 按固定流程执行：A2 创建、A3 建模并反馈、恢复原 A
 ./oc-ctl files t001
 ```
 
-挂起后或 coordinator 因上下文长度结束时，使用 `./oc-ctl continue t001`。该命令
-发送白名单指令 `恢复执行。`，开始一个轮次清零的新执行段，并要求 coordinator
-先重新读取公开反馈与交付文件，并与各角色最近一次已处理的内容版本比较：外部
-更新的 `ent-1/FEEDBACK.md` 会触发原 A2 会话，更新的 ontology 公开交付会触发
-原 A3 会话。文件变化优先于旧完成报告中的“已完成”结论；只有确认内容未变化后，
-coordinator 才能再次按既有状态挂起。不要把一次 HTTP connection refusal 判断为
-daemon 死亡；客户端会对这种繁忙期瞬态失败重试。
+挂起后，由 Host 审计 `ent-1/FEEDBACK.md`：筛除应由 Telora issue 跟踪、A2 无法
+修复的语言/机制问题，也可以在设计固化前增补待验证观点或临时缓解要求。Host
+把文件更新为一个明确批准的反馈批次后，执行 `./oc-ctl continue t001`。一次恢复
+只允许原 A2 处理这一批反馈、原 A3 复验一次，随后无条件再次挂起；不会自动开始
+下一轮。反馈未变化时，恢复不会调用子代理。不要把一次 HTTP connection refusal
+判断为 daemon 死亡；客户端会对这种繁忙期瞬态失败重试。
 
 实验完成后：
 
