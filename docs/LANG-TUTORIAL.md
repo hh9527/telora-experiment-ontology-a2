@@ -375,29 +375,31 @@ contextual intrinsic 糖：`value.dbg!("message")` 等价于
 
 ### 多元素能力目录的类型推断
 
-多个能力记录直接写进同一个 Array 时，各元素的 singleton Atom 标识、闭包类型
-以及 `'Some`/`'None` 窄 variant 可能无法自动收敛到同一个 family 实例。典型表现
-是错误中出现很大的 variant union，或者数组元素类型彼此不一致。
-
-为每个构建函数声明完整的具体返回契约，再把构建结果放入数组：
+显式 `Array(ConcreteFamily)` 契约会向每个元素下传完整的 expected item type。多个
+匿名能力记录中的 singleton Atom、不同闭包、`'Some`/`'None` 窄 variant 和空集合
+因此可以直接按同一个 concrete family 检查：
 
 ```telora
 type DimDef = DimensionDefinition(DimId, DimOutput, Entity, DimInput, Expr);
 
-def order_month: Fn() -> DimDef = fn() {
+let dimensions: Array(DimDef) = [
     {
         id: 'OrderMonth,
         capability: { /* ... */ },
         formula: { /* ... */ },
-    }
-};
-
-let dimensions: Array(DimDef) = [order_month(), customer_tier()];
+    },
+    {
+        id: 'CustomerTier,
+        capability: { /* ... */ },
+        formula: { /* ... */ },
+    },
+];
 ```
 
-同样的原则适用于 `QueryIntent` 等高阶 family 的记录字面量：当外围 family 无法
-从局部 singleton 值唯一确定时，给完整记录或具名构建函数添加 concrete family
-契约。巨大 union 错误应首先检查是否缺少这个公共期望类型。
+元素顺序不影响检查结果；真正不兼容的字段会在对应元素处报告类型冲突。同样的原则
+适用于 `QueryIntent` 等高阶 family 的记录字面量。只有缺少共同的 Array expected
+type，或记录需要先在数组之外分别构造时，才给完整记录或具名构建函数添加 concrete
+family 契约。巨大 union 错误应首先检查是否缺少这个公共期望类型。
 
 ### enum payload 不能是匿名 Struct 类型
 
