@@ -308,9 +308,10 @@ let query_schema = json.schema(Query);
 存在的 JSON 值施加类型契约。`codec.encode` 返回 JSON 值，只有需要文本边界时
 才调用 `json.stringify` 或 `json.stringify_pretty`。
 
-上述 parse、decode 和 encode 都返回 `Result(..., BlameError)`。只有输入无效确实
-违反当前程序不变量时才使用 `result.unwrap`；可预期的外部输入错误应通过 `match`
-保留为显式拒绝或诊断。Codec 失败不会发布部分解码值。
+上述 parse、decode 和 encode 都返回带 native opaque error 的 `Result`。普通源码
+不命名该错误类型；在确实违反当前程序不变量时，匹配 Err 并调用
+`fail!(error.message, error, input)`。可预期的外部输入错误应通过 `match` 保留为
+显式拒绝。Codec 失败不会发布部分解码值。
 
 Struct 和 enum 默认从同一份 TypeMetadata 派生 codec 与 JSON schema。常用的
 `std/json` decorator 可以显式调整其 JSON 表示：
@@ -513,28 +514,45 @@ Debug 表示，会将二者分别写成
 Struct、Array、Dict、Tuple、Dyn 或用户值。主体是结构化值时，消息应保持静态。
 
 ```telora
-let error = blame!("missing capability", authored_subject);
-let reported = report('Error, error);
-let warning = emit_warn!("fallback policy used", authored_subject);
-let ignored = emit_error!("missing capability", authored_subject);
-raise!(error)
+def check_capability: Fn(Subject) -> Result(Capability, String) = fn(subject) {
+    match find_capability(subject) {
+        'Some(capability) => 'Ok(capability),
+        'None => 'Err("missing capability"),
+    }
+};
+
+let optional = check_capability.should_ok!(authored_subject);
+let required = check_capability.must_ok!(authored_subject);
+let optional_existing = existing_result.try_unwrap!();
+let required_existing = existing_result.unwrap!();
+fail!("missing capability", authored_subject)
 ```
 
 Contextual intrinsic 支持 `receiver.ident!(arguments...)` 后置糖，严格等价于把 receiver
-放到前置调用的第一个参数。例如 `error.raise!()` 等价于 `raise!(error)`，
-`"missing capability".blame!(authored_subject)` 等价于上面的 `blame!` 调用。它不是
-method lookup，也不允许调用未由语言定义的 intrinsic。
+放到前置调用的第一个参数。它不是 method lookup，也不允许调用未由语言定义的
+intrinsic。
 
-- `blame!` 构造带来源的 `BlameError` 值，但不报告它。
-- `report` 发布诊断，并返回同一个错误。
-- `emit_info!` 和 `emit_warn!` 报告非阻塞诊断。
-- `emit_error!` 是报告便利形式；Error 诊断会使严格模块执行在其发布边界失败，
-  即使局部求值会继续到足以收集彼此独立诊断的位置。
-- `raise!` 立即以 `Never` 退出最近的函数。
+- `should_ok!` 把 checker 的 `Ok(R)` 变成 `Some(R)`；Err 产生 Warning 和 `None`。
+- `must_ok!` 返回 checker 的 Ok payload；Err 产生失败和 `Never`。
+- `try_unwrap!` 和 `unwrap!` 对已有 `Result(R, String)` 应用相同两种策略。
+- `?` 只传播原容器的失败分支，不产生诊断或转换容器。
+- `fail!(message, subjects...)` 产生失败，并保留 subjects 的来源。
+- `panic!(message)` 只用于实现错误或不变量破坏。
+
+checker 和实参各求值一次，顺序从左到右。当前在泛型函数体内，局部标注不能引用
+外围 `for` 类型参数；仅为产生诊断且输出类型难以从上下文推断时，可以使用模块级
+同类型辅助 checker：
+
+```telora
+def reject_same: for(A) Fn(A, String) -> Result(A, String) =
+    fn(evidence, message) { 'Err(message) };
+
+let ignored = reject_same.should_ok!(subject, "missing capability");
+```
 
 预期的领域拒绝必须能够与意外的运行时失败区分。如果 eDSL 契约要求值级拒绝
-结果，应返回 `Option`、`Result`、显式 enum 或诊断值；不得用 `emit_error!`
-替代该结果通道。
+结果，应返回 `Option`、`Result` 或显式 enum；只有在当前动态契约不能产生承诺结果
+时才使用 `must_ok!` 或 `fail!`。
 
 ## 模块
 
