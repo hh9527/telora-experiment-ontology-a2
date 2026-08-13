@@ -48,7 +48,8 @@ cd ontology
 
 固定字段为 `name`、`repr`、`module`、`line`；只有显式 message 时才有 `message`。
 `repr` 是有界 debug 表示，不是可反序列化的 JSON 值。Host 是否输出或丢弃事件对
-Telora 程序不可感知。
+Telora 程序不可感知。Float 的 `repr` 使用 Debug 表示，例如 `3.0` 和 `-0.0`；它与
+字符串插值和 `fmt.display` 使用的 Display 表示不同。
 
 命令退出码为零表示请求成功；非零表示 CLI 或 Telora 拒绝。`show` 的空匹配成功且
 没有输出。记录中的 `authority` 区分 `authoritative`、`recovery` 与 `debug` 事实。

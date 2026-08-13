@@ -445,9 +445,14 @@ let expr: Expr = 'Column({alias: "o", column: "id"});
 
 ```telora
 let message = `missing capability \{name}`;
+let progress = `ratio=\{3.0}, offset=\{-0.0}`; # "ratio=3, offset=-0"
 ```
 
-插值支持 String、Int 和 Atom 等具有稳定表示的标量。它不渲染任意 Tagged、
+插值支持 String、Int、Float 和 Atom。Float 与 `fmt.display(Float, value)` 都使用
+有限 binary64 的 Display 表示：最短、可往返、不受 locale 影响；`3.0` 显示为 `3`，
+`-0.0` 显示为 `-0`，原始小数或指数拼写不会保留。`dbg!` 的 Float `repr` 使用
+Debug 表示，会将二者分别写成
+`3.0` 和 `-0.0`。插值不渲染任意 Tagged、
 Struct、Array、Dict、Tuple、Dyn 或用户值。主体是结构化值时，消息应保持静态。
 
 ```telora
