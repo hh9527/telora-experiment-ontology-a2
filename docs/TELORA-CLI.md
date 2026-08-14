@@ -16,14 +16,21 @@ Telora 从当前目录向上查找最近的 `telora-deps.json`，因此命令可
 ./bin/telora show @src/ontology.telora -C ontology --exports
 ./bin/telora show @src/ontology.telora -C ontology --at 12:4
 ./bin/telora run -S path/to/file.telora
+./bin/telora run main -C ontology --entry path/to/entry.telora
 ```
 
 企业 crate 同理，在 `ent-1/` 下运行 `run main` 和 `run verify`；`check
 @test/logistics.telora` 只作为开发期分析。
 
-- `run name` 固定执行 `@bin/name.telora` 并打印其 export `output`；`name` 是不含路径
-  分隔符和 `.telora` 后缀的单个 stem。
+- `run name` 固定执行 `@bin/name.telora`；实验使用的内置 Entry 把其 String export
+  `output` 作为 `Output(String)` effect 发给 Host。`name` 是不含路径分隔符和
+  `.telora` 后缀的单个 stem。
 - `run name -C context` 从 `context` 开始向上发现 manifest。
+- `run ... --entry file.telora` 由 Host 显式选择纯 Edge Entry；省略时使用内置 Entry，
+  从 Main 的显式 export record 读取 String `output`。自定义 Entry 的 `MainType` 和
+  输出编码由它自己规定，可以通过 stdio-child effects 编排进程。实验中的普通建模、
+  探索和验收均省略此参数，不自行创建 Entry。Entry 文件路径相对命令进程的当前目录
+  解析。
 - `run -S file` 进入 standalone 模式，不发现 manifest，只使用根文件内的
   `crate.dependency` / `crate.format` options；这些 options 相对文件父目录解析。
   `-S` 与 binary name、`-C` 互斥。

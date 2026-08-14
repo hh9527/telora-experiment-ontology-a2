@@ -614,7 +614,10 @@ ontology-lib/types.telora -> <ontology-lib>/src/types.telora
 
 Host 从当前目录向上查找最近的 `telora-deps.json`，因此可以在 crate 根目录或其任意
 子目录运行命令。`run main` 选择 `@bin/main.telora`；binary name 是不含路径分隔符和
-`.telora` 后缀的单个 stem。`@main` 不是模块 ID。完整示例：
+`.telora` 后缀的单个 stem。`@main` 不是模块 ID。实验使用内置 Edge Entry：它只在
+命令提供 `--input` 时安装外部 `input` binding，并把 Main 的显式 String `output`
+export 转换为 `Output(String)` effect；
+领域代码不创建 Entry，也不导入 Entry 的私有协议面。完整示例：
 
 ```text
 ./bin/telora run main -C ontology
