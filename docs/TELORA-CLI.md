@@ -37,11 +37,12 @@ Telora 从当前目录向上查找最近的 `telora-deps.json`，因此命令可
 - `run`、`check` 和 `show` 的 `-C context` 都从 `context` 开始向上发现 manifest；
   `check` 和 `show` 接受完整稳定模块 ID，`check @test/...` 检查测试入口，`run` 只
   接受 binary name。
-- `check` 可以采用比 `run` 更宽容的处理方式，不承诺执行全部值级行为。行为验收以
-  `run` 的退出状态、Host 诊断和 stdout `output` 为准；不能把 `check` 成功解释为
-  运行时断言已经执行。
+- `check` 用 best-effort 模式继续彼此独立的求值，以一次收集更多诊断；最终判定仍然
+  严格。只有完整求值并形成普通 Module value 时才输出 `ok`，任何语法、类型、解析或
+  运行时失败都会非零退出。最终应用验收仍以 `run` 为准，因为 `run` 还经过 Entry 调度。
 - `show` 输出 `telora.show/v1` JSONL 语义记录；默认列出选中模块的顶层 local
-  definitions。
+  definitions。它查询 recoverable CST 和部分语义/求值证据图，因此在模块损坏时仍可
+  返回不受影响的事实；命令成功只表示查询完成，不表示模块能够通过 `check` 或 `run`。
 - `-p` 按名称的大小写敏感字面子串过滤，不是 glob 或正则。
 - `-k` 接受逗号分隔的 `type,let,def,import`；`--exports` 改查公共接口并与 `-k`
   互斥。
