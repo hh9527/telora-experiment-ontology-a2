@@ -27,7 +27,11 @@ eDSL 负责的共享规则。
   以及由公共 factory 实例化的 Model；
 - `ent-1/src/bin/main.telora`：执行合法查询意图，得到完整规范 Plan 和由该 Plan
   确定转换的 SQL；
-- `ent-1/tests/logistics.telora`：执行非法场景并同时保留规定的拒绝证据；
+- `ent-1/src/bin/verify.telora`：实际执行合法场景的 Plan 覆盖与 SQL 确定性检查，
+  成功时正常退出；
+- `ent-1/src/bin/invalid.telora`：执行题面规定的非法场景，必须以非零状态退出、
+  让 Host 同时观察到规定诊断，且不得产生部分 Plan 或 SQL；
+- `ent-1/tests/logistics.telora`：固定关键类型与模块契约的开发期检查入口；
 - `ent-1/FEEDBACK.md`：只记录实际使用公共 eDSL 时观察到的具体摩擦与缺口；
 - `ent-1/NOTES.md`：记录企业模型选择、验证结果和剩余风险。
 
@@ -47,6 +51,10 @@ let sql = query_request |> make_query_creator(model);
 
 ```text
 ./bin/telora run main -C ent-1
+./bin/telora run verify -C ent-1
+# 预期非零；检查 Host 诊断且不得出现 output
+./bin/telora run invalid -C ent-1
+# 只作开发期分析，不代替上述 run
 ./bin/telora check @test/logistics.telora -C ent-1
 ./bin/telora show @bin/main.telora -C ent-1
 ```

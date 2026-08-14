@@ -9,6 +9,7 @@ Telora 从当前目录向上查找最近的 `telora-deps.json`，因此命令可
 
 ```text
 ./bin/telora run main -C ontology
+./bin/telora run verify -C ontology
 ./bin/telora check @test/ontology.telora -C ontology
 ./bin/telora show @bin/main.telora -C ontology
 ./bin/telora show @src/ontology.telora -C ontology -k type,let,def,import
@@ -17,8 +18,8 @@ Telora 从当前目录向上查找最近的 `telora-deps.json`，因此命令可
 ./bin/telora run -S path/to/file.telora
 ```
 
-企业 crate 同理，在 `ent-1/` 下运行 `run main`，并以
-`check @test/logistics.telora` 检查测试入口。
+企业 crate 同理，在 `ent-1/` 下运行 `run main` 和 `run verify`；`check
+@test/logistics.telora` 只作为开发期分析。
 
 - `run name` 固定执行 `@bin/name.telora` 并打印其 export `output`；`name` 是不含路径
   分隔符和 `.telora` 后缀的单个 stem。
@@ -29,6 +30,9 @@ Telora 从当前目录向上查找最近的 `telora-deps.json`，因此命令可
 - `run`、`check` 和 `show` 的 `-C context` 都从 `context` 开始向上发现 manifest；
   `check` 和 `show` 接受完整稳定模块 ID，`check @test/...` 检查测试入口，`run` 只
   接受 binary name。
+- `check` 可以采用比 `run` 更宽容的处理方式，不承诺执行全部值级行为。行为验收以
+  `run` 的退出状态、Host 诊断和 stdout `output` 为准；不能把 `check` 成功解释为
+  运行时断言已经执行。
 - `show` 输出 `telora.show/v1` JSONL 语义记录；默认列出选中模块的顶层 local
   definitions。
 - `-p` 按名称的大小写敏感字面子串过滤，不是 glob 或正则。

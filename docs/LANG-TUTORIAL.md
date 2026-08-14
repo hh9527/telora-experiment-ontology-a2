@@ -270,8 +270,8 @@ family 在值位置也是普通的有类型元数据能力。family 必须接收
 类型或另一个 family，且不受声明顺序影响：
 
 ```telora
-@struct type Result(Value) = {outcome: Outcome, value: Option(Value)};
-@enum type Outcome = {Published: 'None, Rejected: 'None};
+@struct type Build(Value) = {state: BuildState, value: Option(Value)};
+@enum type BuildState = {Ready: 'None, Pending: 'None};
 ```
 
 包含 family 的环、递归的具体依赖，以及对普通局部辅助项的依赖仍然非法。
@@ -309,9 +309,10 @@ let query_schema = json.schema(Query);
 才调用 `json.stringify` 或 `json.stringify_pretty`。
 
 上述 parse、decode 和 encode 都返回带 native opaque error 的 `Result`。普通源码
-不命名该错误类型；在确实违反当前程序不变量时，匹配 Err 并调用
-`fail!(error.message, error, input)`。可预期的外部输入错误应通过 `match` 保留为
-显式拒绝。Codec 失败不会发布部分解码值。
+不命名该错误类型。调用者确实需要根据失败恢复或选择其他路径时，使用 `match` 保留
+这个 `Result`；当前函数承诺返回解码后的值、失败后无法履行该契约时，使用
+`unwrap!`，或匹配 Err 后调用 `fail!(error.message, error, input)`。Codec 失败不会
+发布部分解码值。
 
 Struct 和 enum 默认从同一份 TypeMetadata 派生 codec 与 JSON schema。常用的
 `std/json` decorator 可以显式调整其 JSON 表示：
@@ -459,18 +460,18 @@ let expr: Expr = 'Column({alias: "o", column: "id"});
 ```telora
 import "std/codec" as codec;
 
-type Rejection = RejectionPayload(
+type Snapshot = ArtifactSnapshot(
     Entity, Dimension, Measure, QueryIntent, Expr, Plan, SqlQuery
 );
 
-def encode_rejection = fn(value: Rejection) {
-    codec.encode(Rejection, value)
+def encode_snapshot = fn(value: Snapshot) {
+    codec.encode(Snapshot, value)
 };
 
-export { Rejection, encode_rejection };
+export { Snapshot, encode_snapshot };
 ```
 
-下游调用 `encode_rejection(value)`，不重建完整 TypeMetadata。该方式同样覆盖跨模块
+下游调用 `encode_snapshot(value)`，不重建完整 TypeMetadata。该方式同样覆盖跨模块
 调用和包含封闭递归类型参数的 family。Alias 和函数契约仍由静态检查，不从运行时值
 反射类型；不要把值打包为 `Any`/`Dyn` 后猜测 witness。
 
@@ -554,9 +555,31 @@ def reject_same: for(A) Fn(A, String) -> Result(A, String) =
 let ignored = reject_same.should_ok!(subject, "missing capability");
 ```
 
-预期的领域拒绝必须能够与意外的运行时失败区分。如果 eDSL 契约要求值级拒绝
-结果，应返回 `Option`、`Result` 或显式 enum；只有在当前动态契约不能产生承诺结果
-时才使用 `must_ok!` 或 `fail!`。
+### 面向契约的失败模式
+
+函数的公共契约承诺返回 `T` 时，普通写法是直接返回 `T`；当当前输入无法产生一个
+合法的 `T` 时，使用 `fail!(message, subjects...)`：
+
+```telora
+def make_plan: Fn(Model, QueryIntent) -> Plan = fn(model, query) {
+    let checked = validate(model, query);
+    if checked.valid {
+        assemble_plan(model, checked)
+    } else {
+        fail!("query cannot produce a complete plan", query, checked)
+    }
+};
+```
+
+普通 Telora 调用者不接收或处理诊断对象。它只表达值依赖、成功结果和失败位置；
+求值器与 Host 依据这些依赖保留来源、跳过失败值的依赖计算，并尽力继续彼此独立的
+工作。最终结果仍然原子发布：不能产生完整 `T` 时，不发布部分 `T`。
+
+不要仅仅为了向 Host 报告诊断，就把 `Fn(Input) -> Output` 改成公开的
+`Fn(Input) -> Outcome(Output, Rejection)`，也不要在 eDSL 中复制一套
+`BlameError`、诊断数组或发布状态机。只有 Telora 调用者本身确实需要恢复、分支或
+组合失败时，才把失败建模为 `Option`、`Result` 或领域 enum。`panic!` 仍只表示实现
+错误或不变量破坏，不用于输入不满足动态契约。
 
 ## 模块
 
@@ -597,6 +620,11 @@ Host 从当前目录向上查找最近的 `telora-deps.json`，因此可以在 c
 ./bin/telora run main -C ontology
 ./bin/telora check @test/ontology.telora -C ontology
 ```
+
+`check` 用于开发期分析，可以采用比 `run` 更宽容的处理方式，不承诺执行或验证全部
+值级行为。最终行为验收必须以 `run` 的退出状态、Host 诊断和输出为准。需要验证的
+成功路径应提供可执行 binary；预期失败路径也应通过独立 binary 的非零退出和诊断
+实际验证，不能仅以 `check` 成功作为证据。
 
 在 binary/test 入口中，`./ontology.telora` 以及其他 `./` 或 `../` import 非法。
 在 `src/` 下的模块中，相对 import 仍然合法，并从导入模块的逻辑目录解析。

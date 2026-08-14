@@ -74,6 +74,8 @@ read/glob/grep/edit 规则显式拒绝 `experiment.json`，因此文件保留在
 `oc-run` 只接受干净且已提交的 plan worktree，记录其 commit 和 origin，随后直接
 clone 到临时 workspace。clone 天然具有正确的 Git worktree 根，opencode 可按
 workspace-relative 路径执行权限判断。运行中的 agent 改动不会污染 submodule。
+构建完成的 Telora binary 也会复制进 workspace 并记录摘要；实验启动后主仓库的
+重新构建不会改变该次实验使用的语言版本。
 
 ## 运行
 
@@ -115,6 +117,10 @@ A2 公开交付后恢复原 A3 完成建模与原始反馈，然后无条件挂�
 ./oc-ctl validate t001
 ./oc-ctl finish t001
 ```
+
+自动 validation 运行 A2/A3 提供的 `main` 与 `verify` binary。`check` 只用于开发期
+分析，不作为最终行为验收；预期失败的 `invalid` binary 由 Host 按非零退出、诊断和
+无 output 三项观察。
 
 `finish` 归档 coordinator 和所有直接子会话、子会话 messages、工作区以及 Host
 验证结果。冻结后退出 TUI，临时目录由 `oc-run` 精确清理。

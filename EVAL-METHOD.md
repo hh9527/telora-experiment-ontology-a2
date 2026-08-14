@@ -39,10 +39,10 @@ correction.
 ## A2 procedure
 
 A2 reads public `docs/`, its private `ontology/GOAL.md` and design, its own
-artifacts, plus only `ent-1/FEEDBACK.md` after A3 has modeled. It executes only four exact
-`bin/telora` command forms. The coordinator must retain A2's native child
-session ID and resume it for every feedback round. Run-specific task text must
-not be appended to the initial prompt.
+artifacts, plus only `ent-1/FEEDBACK.md` after A3 has modeled. It executes only
+role-permitted `bin/telora run/check/show` command forms. The coordinator must
+retain A2's native child session ID and resume it for every feedback round.
+Run-specific task text must not be appended to the initial prompt.
 
 A3 reads public docs, A2's public tutorial and contract, its private
 `ent-1/GOAL.md` and `ent-1/DOMAIN.md`, and its own artifacts. It must not read A2's goal, design, source,
@@ -96,13 +96,17 @@ Use domain-neutral names and mappings unknown to A2. The fixed matrix includes:
 | Reachable only beyond eight | no publication and truncation is observable |
 | Safe/fan-out/safe chain | classified fan-out-only, not missing |
 | Missing target | classified missing with authored subject |
-| Empty or failed capability | aligned evidence retained; no partial plan |
-| Unauthorized capability | value-level rejection, not accidental runtime failure |
-| Builder rejection | distinct from capability and path rejection |
+| Empty or failed capability | sourced Host diagnostic; no partial plan |
+| Unauthorized capability | contract failure diagnostic, not a value-level rejection |
+| Assembly failure | distinct sourced diagnostic; no partial plan |
 | Overlapping catalogs | sourced catalog diagnostic |
 
 Run direct path-classifier checks as well as full-pipeline checks. A compiler
 that discards selected edges can otherwise mask an incorrect classifier.
+`check` is development-time analysis and is not behavioral evidence. Final
+observations come from `run`: successful fixtures must exit zero with their
+complete output, while invalid fixtures must exit nonzero with the required
+Host diagnostics and no output value.
 
 ## Process measures
 
