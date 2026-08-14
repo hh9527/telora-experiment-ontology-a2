@@ -575,6 +575,19 @@ def make_plan: Fn(Model, QueryIntent) -> Plan = fn(model, query) {
 求值器与 Host 依据这些依赖保留来源、跳过失败值的依赖计算，并尽力继续彼此独立的
 工作。最终结果仍然原子发布：不能产生完整 `T` 时，不发布部分 `T`。
 
+best-effort 求值在复合值内部也按数据依赖推进。`array.map` 会保留失败槽位、跳过它
+继续后续逐项变换，并按索引顺序处理健康槽位；`array.length` 只依赖已知形状；选择
+失败槽位会传播原诊断。`filter` 可以继续检查其他独立 predicate，但任一 predicate
+失败都会令最终成员关系不可发布；`fold` 的 accumulator 失败后不再调用后续 reducer。
+这些失败槽位不是语言值或额外 variant，源码不能匹配或恢复。可达性只决定还可继续
+哪些诊断计算；只要出现任何 error，本轮 World 导出就整体失去意义，即使干净的最终根
+仍可算出，普通 module/codec/Host 边界也不会发布它。需要业务恢复时仍显式使用
+`Option`、`Result` 或领域 enum。
+
+依赖库失败时，工具可以把它作为内部 `UntrustedModule` 恢复状态继续检查其他无关依赖；
+这不是可以 import 的普通 Module，也不会把原始 error 降级。命令最终选择的根模块只要
+恢复图中仍有 error，就不会产生可交付导出。
+
 不要仅仅为了向 Host 报告诊断，就把 `Fn(Input) -> Output` 改成公开的
 `Fn(Input) -> Outcome(Output, Rejection)`，也不要在 eDSL 中复制一套
 `BlameError`、诊断数组或发布状态机。只有 Telora 调用者本身确实需要恢复、分支或
