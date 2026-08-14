@@ -74,7 +74,8 @@ Check at least:
 - role families and classification types are exported and consumable;
 - all imports resolve from the declared experiment environment;
 - direct generic products remain precise;
-- expected rejection is represented in the result value;
+- expected contract failure is represented by sourced Host diagnostics and the
+  absence of a published result, not by a value-level rejection;
 - selected relations reach the builder with their mapping payload; and
 - authored subjects survive into structured diagnostics.
 
@@ -103,10 +104,11 @@ Use domain-neutral names and mappings unknown to A2. The fixed matrix includes:
 
 Run direct path-classifier checks as well as full-pipeline checks. A compiler
 that discards selected edges can otherwise mask an incorrect classifier.
-`check` is development-time analysis and is not behavioral evidence. Final
-observations come from `run`: successful fixtures must exit zero with their
-complete output, while invalid fixtures must exit nonzero with the required
-Host diagnostics and no output value.
+`check` is development-time analysis and is not behavioral evidence. Successful
+fixtures use ordinary `run` and must exit zero with their complete output.
+Invalid fixtures use `run --best-effort` so independent failures can be
+observed in one diagnostic pass; they must exit nonzero with the required Host
+diagnostics and no output value or Entry effect.
 
 ## Process measures
 

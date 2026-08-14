@@ -52,8 +52,8 @@ let sql = query_request |> make_query_creator(model);
 ```text
 ./bin/telora run main -C ent-1
 ./bin/telora run verify -C ent-1
-# 预期非零；检查 Host 诊断且不得出现 output
-./bin/telora run invalid -C ent-1
+# 预期非零；用诊断模式收集独立失败，检查 Host 诊断且不得出现 output
+./bin/telora run invalid -C ent-1 --best-effort
 # 只作开发期分析，不代替上述 run
 ./bin/telora check @test/logistics.telora -C ent-1
 ./bin/telora show @bin/main.telora -C ent-1

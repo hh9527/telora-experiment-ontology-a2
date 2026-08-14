@@ -48,8 +48,8 @@ model 得到规范 Plan；该 Plan 经公共 transform 得到确定 SQL；组合
 ```text
 ./bin/telora run main -C ontology
 ./bin/telora run verify -C ontology
-# 预期非零；检查 Host 诊断且不得出现 output
-./bin/telora run invalid -C ontology
+# 预期非零；用诊断模式收集独立失败，检查 Host 诊断且不得出现 output
+./bin/telora run invalid -C ontology --best-effort
 # 只作开发期分析，不代替上述 run
 ./bin/telora check @test/ontology.telora -C ontology
 ./bin/telora show @bin/main.telora -C ontology

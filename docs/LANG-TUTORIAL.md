@@ -274,9 +274,10 @@ family 在值位置也是普通的有类型元数据能力。family 必须接收
 @enum type BuildState = {Ready: 'None, Pending: 'None};
 ```
 
-包含 family 的环、递归的具体依赖，以及对普通局部辅助项的依赖仍然非法。
-标识、payload、映射和计划使用模型提供的具体类型。不得用 `Any`、`Dyn` 或
-String 标识替代未知关系。
+family 依赖图中的环、family 自身的参数化递归，以及对普通局部辅助项的依赖仍然
+非法。family 可以引用已经封闭的 concrete recursive type；递归骨架保持 concrete，
+只在其外部参数化 capability、renderer 或 dialect。标识、payload、映射和计划使用
+模型提供的具体类型。不得用 `Any`、`Dyn` 或 String 标识替代未知关系。
 
 ## JSON、codec 与 schema
 
@@ -537,6 +538,16 @@ Contextual intrinsic 支持 `receiver.ident!(arguments...)` 后置糖，严格�
 放到前置调用的第一个参数。它不是 method lookup，也不允许调用未由语言定义的
 intrinsic。
 
+对于 `checker: Fn(A1, ..., An) -> Result(R, String)`：
+
+```text
+checker.should_ok!(a1, ..., an) : Option(R)
+checker.must_ok!(a1, ..., an)   : R
+```
+
+checker 可以接收零到多个参数，但不能省略 checker。checker 与各参数都只求值一次，
+顺序从左到右；发生 Warning 或 failure 时，参数按同一顺序成为诊断证据。
+
 - `should_ok!` 把 checker 的 `Ok(R)` 变成 `Some(R)`；Err 产生 Warning 和 `None`。
 - `must_ok!` 返回 checker 的 Ok payload；Err 产生失败和 `Never`。
 - `try_unwrap!` 和 `unwrap!` 对已有 `Result(R, String)` 应用相同两种策略。
@@ -544,9 +555,8 @@ intrinsic。
 - `fail!(message, subjects...)` 产生失败，并保留 subjects 的来源。
 - `panic!(message)` 只用于实现错误或不变量破坏。
 
-checker 和实参各求值一次，顺序从左到右。当前在泛型函数体内，局部标注不能引用
-外围 `for` 类型参数；仅为产生诊断且输出类型难以从上下文推断时，可以使用模块级
-同类型辅助 checker：
+当前在泛型函数体内，局部标注不能引用外围 `for` 类型参数；仅为产生诊断且输出类型
+难以从上下文推断时，可以使用模块级同类型辅助 checker：
 
 ```telora
 def reject_same: for(A) Fn(A, String) -> Result(A, String) =
@@ -637,10 +647,11 @@ export 转换为 `Output(String)` effect；
 ./bin/telora check @test/ontology.telora -C ontology
 ```
 
-`check` 用于开发期分析，可以采用比 `run` 更宽容的处理方式，不承诺执行或验证全部
-值级行为。最终行为验收必须以 `run` 的退出状态、Host 诊断和输出为准。需要验证的
-成功路径应提供可执行 binary；预期失败路径也应通过独立 binary 的非零退出和诊断
-实际验证，不能仅以 `check` 成功作为证据。
+`check` 用 best-effort 模式求值所选模块的导出图，并以严格 finalization 决定退出
+状态；任何 error 或不完整模块都会非零退出。它不进行 Entry 调度，也不会调用已经
+导出的函数，因此不等价于应用行为验收。成功路径必须由普通 `run` 严格执行；需要
+一次观察多个独立失败的预期失败入口使用 `run --best-effort`，并检查非零退出、Host
+诊断和无 output。不能仅以 `check` 成功作为行为证据。
 
 在 binary/test 入口中，`./ontology.telora` 以及其他 `./` 或 `../` import 非法。
 在 `src/` 下的模块中，相对 import 仍然合法，并从导入模块的逻辑目录解析。
