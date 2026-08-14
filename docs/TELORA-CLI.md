@@ -38,8 +38,10 @@ Telora 从当前目录向上查找最近的 `telora-deps.json`，因此命令可
   `check` 和 `show` 接受完整稳定模块 ID，`check @test/...` 检查测试入口，`run` 只
   接受 binary name。
 - `check` 用 best-effort 模式继续彼此独立的求值，以一次收集更多诊断；最终判定仍然
-  严格。只有完整求值并形成普通 Module value 时才输出 `ok`，任何语法、类型、解析或
-  运行时失败都会非零退出。最终应用验收仍以 `run` 为准，因为 `run` 还经过 Entry 调度。
+  严格。stdout 完全采用 `telora.check/v1` JSONL：先输出诊断 records，最后输出一条
+  `summary` record。只有完整求值并形成普通 Module value 时 summary 才是 `status:
+  "ok"`；任何语法、类型、解析或运行时失败都会得到 `status: "error"` 和非零退出。
+  最终应用验收仍以 `run` 为准，因为 `run` 还经过 Entry 调度。
 - `show` 输出 `telora.show/v1` JSONL 语义记录；默认列出选中模块的顶层 local
   definitions。它查询 recoverable CST 和部分语义/求值证据图，因此在模块损坏时仍可
   返回不受影响的事实；命令成功只表示查询完成，不表示模块能够通过 `check` 或 `run`。
