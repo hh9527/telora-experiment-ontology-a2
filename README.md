@@ -104,6 +104,19 @@ A2 公开交付后恢复原 A3 完成建模与原始反馈，然后无条件挂�
 ./oc-ctl files t001
 ```
 
+外置 Observer 使用稳定的事件批次接口；它只看文件、命令、工具、子任务和角色状态，
+不读取 reasoning，也不控制实验：
+
+```bash
+./oc-ctl watch t001 --debounce 30 --timeout 300
+./oc-ctl report t001 --body-file /tmp/t001-progress.md
+```
+
+`watch` 在获得进展后安静 30 秒才返回；完全没有进展时最多等待 300 秒。`report`
+总会在 execution 下保留本地记录，并按实验准备时冻结的 sink 配置分发；调用者不能
+指定或覆盖报告目标。角色的计划内验收命令也会在 TUI 启动前完成权限预检，任何
+`ask`、未放行或拒绝的样本都会使准备直接失败。
+
 挂起后，由 Host 审计 `ent-1/FEEDBACK.md`：筛除应由 Telora issue 跟踪、A2 无法
 修复的语言/机制问题，也可以在设计固化前增补待验证观点或临时缓解要求。Host
 把文件更新为一个明确批准的反馈批次后，执行 `./oc-ctl continue t001`。一次恢复

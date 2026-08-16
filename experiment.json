@@ -7,6 +7,29 @@
   "environment": {
     "OPENCODE_EXPERIMENTAL_OUTPUT_TOKEN_MAX": "128000"
   },
+  "permission_preflight": {
+    "a2": [
+      "./bin/telora run main -C ontology",
+      "./bin/telora run invalid -C ontology --best-effort",
+      "./bin/telora check @test/ontology.telora -C ontology",
+      "./bin/telora show @bin/main.telora -C ontology"
+    ],
+    "a3": [
+      "./bin/telora run main -C ent-1",
+      "./bin/telora run invalid -C ent-1 --best-effort",
+      "./bin/telora check @test/enterprise.telora -C ent-1",
+      "./bin/telora show @bin/main.telora -C ent-1"
+    ]
+  },
+  "reporting": {
+    "sinks": [
+      {
+        "kind": "github_issue_comment",
+        "repository": "hh9527/telora",
+        "issue": 63
+      }
+    ]
+  },
   "artifacts": [
     {
       "name": "telora",
