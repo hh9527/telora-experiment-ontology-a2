@@ -649,9 +649,9 @@ export 转换为 `Output(String)` effect；
 
 `check` 用 best-effort 模式求值所选模块的导出图，并以严格 finalization 决定退出
 状态；任何 error 或不完整模块都会非零退出。它不进行 Entry 调度，也不会调用已经
-导出的函数，因此不等价于应用行为验收。成功路径必须由普通 `run` 严格执行；需要
-一次观察多个独立失败的预期失败入口使用 `run --best-effort`，并检查非零退出、Host
-诊断和无 output。不能仅以 `check` 成功作为行为证据。
+导出的函数，因此不等价于应用行为验收。成功路径必须由普通 `run` 严格执行；遇到
+失败时可以用 `run --best-effort` 扩大诊断覆盖，并检查非零退出、Host 诊断和无
+output。不能仅以 `check` 成功作为行为证据。
 
 在 binary/test 入口中，`./ontology.telora` 以及其他 `./` 或 `../` import 非法。
 在 `src/` 下的模块中，相对 import 仍然合法，并从导入模块的逻辑目录解析。

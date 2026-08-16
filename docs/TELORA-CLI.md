@@ -31,7 +31,7 @@ Telora 从当前目录向上查找最近的 `telora-deps.json`，因此命令可
   best-effort 诊断求值；只要出现任何 error，stderr 输出 `telora.run/v1` JSONL 诊断与
   error summary，非零退出且不产生任何 Entry effect，即使一个不依赖失败的干净根值仍能
   算出。没有 error 时仍重新走严格 Entry/Host lifecycle；成功结果的最终验收使用普通
-  `run`。实验中的 `invalid` 是有意失败的诊断入口，使用本参数一次收集独立失败。
+  `run`。实验中的 `invalid` 是有意失败的诊断入口，本参数用于调查问题时扩大诊断覆盖。
 - `run ... --entry file.telora` 由 Host 显式选择纯 Edge Entry；省略时使用内置 Entry，
   从 Main 的显式 export record 读取 String `output`。自定义 Entry 的 `MainType` 和
   输出编码由它自己规定，可以通过 stdio-child effects 编排进程。实验中的普通建模、

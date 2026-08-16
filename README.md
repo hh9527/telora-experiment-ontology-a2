@@ -79,22 +79,28 @@ workspace-relative 路径执行权限判断。运行中的 agent 改动不会污
 
 ## 运行
 
-在外部终端准备并进入 TUI：
+在外部终端登记 execution。该命令先停在 waiting，不 clone plan、不构建 artifact、
+不启动 daemon 或 TUI：
 
 ```bash
 ./oc-run ontology-edsl t001 --port 4196
 ```
 
-TUI 准备好后，在控制会话启动 coordinator：
+控制 Agent 完成前序工作后启动实验：
 
 ```bash
 ./oc-ctl start t001
 ```
 
+`start` 原子创建 `target/exp/t001/start-request.json`。等待中的 `oc-run` 检测到请求后，
+才以此时的 plan commit 和 Telora binary 准备工作区、执行权限预检、创建会话并进入
+TUI；`oc-ctl start` 同时等待 TUI daemon 可用，然后发送唯一的首次提示。用户不需要
+在 TUI ready 后再次确认。实验输入从此冻结，运行期间不热更新。
+
 coordinator 按固定首次流程执行：并行启动 A2 首次实现和 A3 语言/领域准备，等待
 A2 公开交付后恢复原 A3 完成建模与原始反馈，然后无条件挂起。它不会自动把原始
 反馈交给 A2，也不判断任务是否收敛。
-观察命令不会中断实验：
+控制 Agent 直接使用下列只读命令观察，不启动单独的 Observer：
 
 ```bash
 ./oc-ctl status t001
@@ -104,25 +110,21 @@ A2 公开交付后恢复原 A3 完成建模与原始反馈，然后无条件挂�
 ./oc-ctl files t001
 ```
 
-外置 Observer 使用稳定的事件批次接口；它只看文件、命令、工具、子任务和角色状态，
-不读取 reasoning，也不控制实验：
-
-```bash
-./oc-ctl watch t001 --debounce 30 --timeout 300
-./oc-ctl report t001 --body-file /tmp/t001-progress.md
-```
-
-`watch` 在获得进展后安静 30 秒才返回；完全没有进展时最多等待 300 秒。`report`
-总会在 execution 下保留本地记录，并按实验准备时冻结的 sink 配置分发；调用者不能
-指定或覆盖报告目标。角色的计划内验收命令也会在 TUI 启动前完成权限预检，任何
-`ask`、未放行或拒绝的样本都会使准备直接失败。
+实验活跃期间，控制 Agent 每五分钟在当前用户会话报告一次角色阶段、文件/命令进展、
+验证结果和阻塞。没有新的工具事件时只报告仍在工作或等待，不推测不可见 reasoning，
+也不因长时间思考轻易干预。是否把这类人工解读同步到某个实验 issue 由本次运行的
+外部要求决定，不是 plan reporting sink 或 OpenCode 角色的职责。角色的计划内验收
+命令在 TUI 启动前完成权限预检，任何 `ask`、未放行或拒绝的样本都会使准备直接失败。
 
 挂起后，由 Host 审计 `ent-1/FEEDBACK.md`：筛除应由 Telora issue 跟踪、A2 无法
 修复的语言/机制问题，也可以在设计固化前增补待验证观点或临时缓解要求。Host
-把文件更新为一个明确批准的反馈批次后，执行 `./oc-ctl continue t001`。一次恢复
-只允许原 A2 处理这一批反馈、原 A3 复验一次，随后无条件再次挂起；不会自动开始
-下一轮。反馈未变化时，恢复不会调用子代理。不要把一次 HTTP connection refusal
-判断为 daemon 死亡；客户端会对这种繁忙期瞬态失败重试。
+如果 A2/A3 在当前语言能力内仍有较大的自身改进空间，Host 把文件更新为一个明确
+批准的反馈批次后，执行 `./oc-ctl iterate t001`。它只允许原 A2 处理这一批反馈、
+原 A3 复验一次；整个 execution 最多追加一次修订，第二次 `iterate` 由控制器拒绝。
+如果剩余问题需要修改 Telora 语言、类型系统、标准库、CLI 或机制，或者只剩边际
+润色，则不迭代，直接结束。`oc-ctl continue` 只用于 assistant 因输出长度中止后的
+原任务续跑，不用于反馈修订。不要把一次 HTTP connection refusal 判断为 daemon
+死亡；客户端会对这种繁忙期瞬态失败重试。
 
 实验完成后：
 

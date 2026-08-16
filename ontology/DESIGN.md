@@ -62,8 +62,7 @@ eDSL 至少为下列角色暴露可执行的 TypeMetadata family：
 2. 使用原始请求标识调用 lowering；
 3. 在内部保留足以证明每项请求是否完成的对齐关系；
 4. 只收集实际完成的值，不得伪造占位值；
-5. 通过有类型的 selector 派生关系需求并去重；
-6. 一项失败发生后，仍允许 Host 继续处理彼此独立的工作。
+5. 通过有类型的 selector 派生关系需求并去重。
 
 缺失、未授权、不匹配或未成功的能力必须使用 `fail!` 产生带有创作主体和模型事实
 来源的 Host 诊断。公共 API 不为此返回 `Rejection`、诊断数组或逐请求 Evidence。
@@ -260,10 +259,9 @@ transform 阶段重新作领域决策。String 只可承载表名、列名、ali
 这些来源通过 `fail!` 的有序 subjects 及其来源元数据交给 Host，而不是复制成领域
 错误协议。message 应稳定描述规则，subjects 保留请求、能力或关系等结构化事实。
 
-eDSL 只声明数据依赖、检查和 `fail!` 位置，不实现诊断调度器、Evidence 状态机或
-可恢复错误协议。在 best-effort 诊断求值中，求值器与 Host 可以继续已经证明独立的
-工作：例如，一个请求缺少 capability 时，仍可分类其他能够直接从 QueryIntent
-确定的目标路径。普通严格执行保持 fail-fast，不保证一次收集全部独立诊断。
+eDSL 只声明真实的数据依赖、检查和 `fail!` 位置，不实现诊断调度器、Evidence
+状态机或可恢复错误协议。求值器与 Host 在诊断模式中能否继续独立工作属于 Telora
+机制，不是公共 eDSL API 或实现的考核项。普通严格执行保持 fail-fast。
 
 ## 原子发布
 

@@ -21,15 +21,6 @@
       "./bin/telora show @bin/main.telora -C ent-1"
     ]
   },
-  "reporting": {
-    "sinks": [
-      {
-        "kind": "github_issue_comment",
-        "repository": "hh9527/telora",
-        "issue": 63
-      }
-    ]
-  },
   "artifacts": [
     {
       "name": "telora",

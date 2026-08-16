@@ -57,13 +57,17 @@ The Host validates deliverables in this order:
 4. enterprise-facing tutorial and contract; and
 5. hidden end-to-end fixtures.
 
-For each correction, record the authored revision, commands run, complete
-diagnostics, feedback sent, response, files changed, and outcome. The Host
-relays observations, not solutions. Do not name an algorithm or suggest code.
+After the first A2-A3 delivery, the Host records either `stop` or `iterate` and
+the evidence for that decision. One additional A2 revision followed by one A3
+verification is allowed only when substantial improvement remains within the
+frozen Telora language and mechanism capabilities. Language, type-system,
+standard-library, CLI, and runtime defects are filtered into separate issues;
+they are not relayed as workaround requirements. A completed execution can use
+at most one such iteration regardless of its outcome.
 
-Budget: at most six diagnostic correction turns per deliverable and two hidden
-acceptance correction turns. Two consecutive turns with the same unresolved
-root cause are recorded as stuck rather than silently expanding the budget.
+For the optional iteration, record the authored revision, commands run,
+diagnostics, approved feedback, response, files changed, and outcome. The Host
+relays observations, not solutions. Do not name an algorithm or suggest code.
 
 ## Static acceptance
 
@@ -106,9 +110,10 @@ Run direct path-classifier checks as well as full-pipeline checks. A compiler
 that discards selected edges can otherwise mask an incorrect classifier.
 `check` is development-time analysis and is not behavioral evidence. Successful
 fixtures use ordinary `run` and must exit zero with their complete output.
-Invalid fixtures use `run --best-effort` so independent failures can be
-observed in one diagnostic pass; they must exit nonzero with the required Host
-diagnostics and no output value or Entry effect.
+Invalid fixtures use `run --best-effort` when broader diagnostic evidence is
+useful; they must exit nonzero with the required Host diagnostics and no output
+value or Entry effect. The number of independent diagnostics collected in one
+invocation is a Telora mechanism observation, not an A2/A3 acceptance score.
 
 ## Process measures
 

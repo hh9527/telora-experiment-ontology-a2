@@ -24,8 +24,8 @@
 - `ontology/src/bin/main.telora`：展示完整成功路径的可执行入口；
 - `ontology/src/bin/verify.telora`：实际执行请求覆盖、关系选择和转换确定性检查，
   成功时正常退出的行为验证入口；
-- `ontology/src/bin/invalid.telora`：组合彼此独立的能力与路径失败，必须以非零状态
-  退出并产生对应 Host 诊断，不得产生 output；
+- `ontology/src/bin/invalid.telora`：展示无法满足契约时使用 `fail!`，必须以非零状态
+  退出并产生正确的 Host 诊断，不得产生 output；
 - `ontology/tests/ontology.telora`：固定关键类型与模块契约的开发期检查入口；
 - `ontology/DSL-TUTORIAL.md`：企业作者仅凭本文即可使用公共 API 的教程；
 - `ontology/AI3-CONTRACT.md`：列出企业模型必须提供的有类型输入、公共 API、
@@ -38,8 +38,9 @@
 成功入口必须实际展示：结构化领域知识经 factory 得到 model；同一个查询意图经
 model 得到规范 Plan；该 Plan 经公共 transform 得到确定 SQL；组合门面
 `make_query_creator(model)` 得到相同 SQL。`verify` 必须实际执行 Plan 的请求覆盖、
-关系选择覆盖和转换确定性检查。`invalid` 必须证明独立失败均可被 Host 观察，且没有
-部分 Plan/SQL。公共 API 不得为了验证而返回 `Rejection`、诊断数组或发布状态。
+关系选择覆盖和转换确定性检查。`invalid` 必须证明失败时没有部分 Plan/SQL。公共 API
+不得为了验证而返回 `Rejection`、诊断数组或发布状态；不要求 eDSL 为单次收集多个
+诊断实现 Evidence、恢复状态机或诊断调度器。
 
 ## 验证
 
@@ -48,7 +49,7 @@ model 得到规范 Plan；该 Plan 经公共 transform 得到确定 SQL；组合
 ```text
 ./bin/telora run main -C ontology
 ./bin/telora run verify -C ontology
-# 预期非零；用诊断模式收集独立失败，检查 Host 诊断且不得出现 output
+# 预期非零；遇到问题时用诊断模式检查 Host 诊断且不得出现 output
 ./bin/telora run invalid -C ontology --best-effort
 # 只作开发期分析，不代替上述 run
 ./bin/telora check @test/ontology.telora -C ontology
