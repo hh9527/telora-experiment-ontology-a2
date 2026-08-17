@@ -125,19 +125,19 @@ eDSL 至少为下列角色暴露可执行的 TypeMetadata family：
 布局或柯里化形式，但其最小语义应接近以下参考形状：
 
 ```telora
-@struct type Request(Id, Subject, Input) = {
+type Request(Id, Subject, Input) = struct {
   id: Id,
   subject: Subject,
   input: Input,
 };
 
-@struct type QueryRequest(
+type QueryRequest(
   MeasureId,
   DimensionId,
   Subject,
   MeasureInput,
   DimensionInput,
-) = {
+) = struct {
   measures: Array(Request(MeasureId, Subject, MeasureInput)),
   dimensions: Array(Request(DimensionId, Subject, DimensionInput)),
 };
@@ -210,7 +210,7 @@ Plan 必须由 eDSL 根据已验证的能力输出和所选关系自动组装。
 以下概念形状（实现可以将该类型命名为 `SqlPlan`、`SqlQuery` 或等价名称）：
 
 ```telora
-@struct type SqlQuery = {
+type SqlQuery = struct {
   sql: String,
   bindings: Array(Val),
 };
